@@ -26,7 +26,7 @@ jobs:
 
       # 🔹 Deploy Backend to Render
       - name: Trigger Backend Deploy
-        run: curl -X POST "${{ secrets.RENDER_BACKEND_DEPLOY_HOOK_URL }}"
+        run: curl -X POST "${{ secrets.RENDER_BACKEND_DEPLOY_HOOK_UAT_URL }}"
 
       # 🔹 Frontend (Vue.js) Build and Deploy
       - name: Install Node.js
@@ -42,4 +42,4 @@ jobs:
 
       # 🔹 Deploy Frontend to Render
       - name: Trigger Frontend Deploy
-        run: curl -X POST "${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK_URL }}"
+        run: curl -X POST "${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK_UAT_URL }}"
