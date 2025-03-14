@@ -21,7 +21,7 @@ jobs:
 
       - name: Build and Push Backend Docker Image
         run: |
-          cd backend
+          cd server
           docker build -f Dockerfile -t darkfat123/golang-ws:latest .
           docker push darkfat123/golang-ws:latest
 
@@ -37,7 +37,7 @@ jobs:
 
       - name: Install dependencies and build Vue app
         run: |
-          cd frontend
+          cd web-vue
           npm install
           npm run build
 
