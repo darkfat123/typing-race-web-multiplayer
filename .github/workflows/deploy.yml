@@ -21,7 +21,6 @@ jobs:
 
       - name: Build and Push Backend Docker Image
         run: |
-          cd server
           docker build -f Dockerfile -t darkfat123/golang-ws:latest .
           docker push darkfat123/golang-ws:latest
 
