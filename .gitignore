@@ -1,0 +1,31 @@
+.env
+
+# Logs
+web-vue/logs
+web-vue/*.log
+web-vue/npm-debug.log*
+web-vue/yarn-debug.log*
+web-vue/yarn-error.log*
+web-vue/pnpm-debug.log*
+web-vue/lerna-debug.log*
+
+web-vue/node_modules
+web-vue/.DS_Store
+web-vue/dist
+web-vue/dist-ssr
+web-vue/coverage
+web-vue/*.local
+
+/cypress/videos/
+/cypress/screenshots/
+
+# Editor directories and files
+web-vue/.vscode/*
+web-vue/.idea
+web-vue/*.suo
+web-vue/*.ntvs*
+web-vue/*.njsproj
+web-vue/*.sln
+web-vue/*.sw?
+
+web-vue/*.tsbuildinfo
