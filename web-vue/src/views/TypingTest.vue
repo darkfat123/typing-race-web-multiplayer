@@ -1,6 +1,4 @@
 <template>
-    <button @click="goBack" class="btn">Back</button>
-
     <div v-if="connected" class="typing-container">
         <h3>Players in this room:</h3>
         <ul class="player-list">
@@ -8,7 +6,10 @@
                 {{ player }} <span v-if="readyPlayers.includes(player)">✅ Ready</span>
             </li>
         </ul>
-        <button v-if="!isReady" @click="sendReadyFlag" class="btn">Ready</button>
+        <div class="button-container">
+            <button @click="goBack" class="btn-back">Back</button>
+            <button v-if="!isReady" @click="sendReadyFlag" class="btn">Ready</button>
+        </div>
     </div>
 
     <div v-if="connected && isGameStarted" class="typing-container">
@@ -193,6 +194,21 @@ h2 {
     margin-bottom: 10px;
     border-radius: 5px;
     border: 1px solid #ccc;
+}
+
+.button-container {
+    display: flex;
+    gap: 10px; /* Adds space between buttons */
+}
+
+.btn-back {
+    width: 100%;
+    padding: 10px;
+    background: #960d0d;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
 }
 
 .btn {

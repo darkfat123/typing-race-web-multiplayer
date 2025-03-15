@@ -62,6 +62,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Player %s has joined room %s", player.Username, roomID)
 
 	updateUserList(room)
+	updateReadyStatus(room)
 
 	for {
 		var message map[string]string
