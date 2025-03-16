@@ -68,17 +68,6 @@ export default {
             }
             this.$router.push('/');
         },
-        beforeRouteLeave(to, from, next) {
-            // Ensure WebSocket is closed when leaving the current route
-            if (this.ws && this.connected) {
-                const message = { type: "close", username: this.username, roomID: this.roomID };
-                this.ws.send(JSON.stringify(message)); // Send the close message to the server
-                setTimeout(() => {
-                    this.ws.close(); // Close WebSocket after a short delay
-                }, 100);
-            }
-            next(); // Allow the navigation to continue
-        },
         connectWebSocket() {
             if (this.ws) {
                 this.ws.close();
@@ -143,7 +132,7 @@ export default {
     beforeUnmount() {
         if (this.ws) {
             const message = { type: "close", username: this.username, roomID: this.roomID };
-            this.ws.send(JSON.stringify(message)); // Notify backend before closing
+            this.ws.send(JSON.stringify(message)); 
             this.ws.close();
         }
     },
@@ -154,39 +143,6 @@ export default {
 
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@100;200;300;400;500;600;700&display=swap');
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: "IBM Plex Sans Thai Looped", sans-serif;
-}
-
-.main-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    min-height: 100vh;
-    background: #f4f4f4;
-}
-
-h2 {
-    margin-bottom: 10px;
-}
-
-.room-container {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    text-align: center;
-    width: 100%;
-    max-width: 1000px;
-    margin-left: 10px;
-    margin-right: 10px;
-}
 
 .input {
     width: 100%;
@@ -285,10 +241,6 @@ h2 {
 
 @media (max-width: 600px) {
     .typing-container {
-        max-width: 100%;
-    }
-
-    .room-container {
         max-width: 100%;
     }
 }
