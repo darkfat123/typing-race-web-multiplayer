@@ -3,7 +3,7 @@
         <h3>Players in this room:</h3>
         <ul class="player-list">
             <li v-for="player in playersInRoom" :key="player">
-                {{ player }} <span v-if="readyPlayers.includes(player)">✅ Ready</span>
+                {{ player }} <span v-if="(readyPlayers || []).includes(player)">✅ Ready</span>
             </li>
         </ul>
         <div class="button-container">
@@ -89,7 +89,7 @@ export default {
                     this.playersInRoom = data.users;
                 }
                 if (data.type === "update_ready") {
-                    this.readyPlayers = data.users;
+                    this.readyPlayers = Array.isArray(data.users) ? data.users : [];
                 }
                 if (data.type === "start_game") {
                     this.isGameStarted = true;
@@ -132,7 +132,7 @@ export default {
     beforeUnmount() {
         if (this.ws) {
             const message = { type: "close", username: this.username, roomID: this.roomID };
-            this.ws.send(JSON.stringify(message)); 
+            this.ws.send(JSON.stringify(message));
             this.ws.close();
         }
     },
@@ -143,7 +143,6 @@ export default {
 
 
 <style>
-
 .input {
     width: 100%;
     padding: 10px;
@@ -154,7 +153,8 @@ export default {
 
 .button-container {
     display: flex;
-    gap: 10px; /* Adds space between buttons */
+    gap: 10px;
+    /* Adds space between buttons */
 }
 
 .btn-back {
