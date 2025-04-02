@@ -14,7 +14,15 @@
 
     <div v-if="connected && isGameStarted" class="typing-container">
         <h3>Type this message:</h3>
-        <p class="typing-text">{{ givenText }}</p>
+        <p class="typing-text">
+            <span
+                v-for="(char, index) in givenText"
+                :key="index"
+                :class="getCharClass(index)"
+            >
+                {{ char }}
+            </span>
+        </p>
         <textarea v-model="inputText" @input="sendText" class="typing-area"></textarea>
         <h3>Live WPM:</h3>
         <ul class="wpm-list">
@@ -121,6 +129,10 @@ export default {
             if (this.ws && this.connected) {
                 this.ws.send(JSON.stringify({ text: this.inputText }));
             }
+        },
+        getCharClass(index) {
+            if (!this.inputText[index]) return "default";
+            return this.inputText[index] == this.givenText[index] ? "correct" : "incorrect";
         },
         sendReadyFlag() {
             if (this.ws && this.connected) {
@@ -236,6 +248,13 @@ export default {
     width: calc(33.33% - 10px);
     /* Ensures 3 items per row */
     box-sizing: border-box;
+}
+
+.correct {
+    background-color: #A0C878;
+}
+.incorrect {
+    background-color: #D2665A;
 }
 
 
