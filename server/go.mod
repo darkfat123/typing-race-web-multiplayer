@@ -1,4 +1,4 @@
-module thai-typing-race
+module server
 
 go 1.20
 
