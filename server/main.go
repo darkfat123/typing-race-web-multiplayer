@@ -17,7 +17,12 @@ var rooms = make(map[string]*models.Room)
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		return r.Header.Get("Origin") == os.Getenv("ALLOWED_ORIGIN")
+		origin := r.Header.Get("Origin")
+		allowedOrigin := os.Getenv("ALLOWED_ORIGIN")
+
+		log.Printf("WebSocket request from %s with origin: %s (Allowed: %s)", r.RemoteAddr, origin, allowedOrigin)
+
+		return origin == allowedOrigin
 	},
 }
 
