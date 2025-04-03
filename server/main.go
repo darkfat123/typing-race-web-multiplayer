@@ -38,6 +38,15 @@ var texts = []string{
 	"Technology connects people around the world through social media and communication apps. Many businesses rely on technology to streamline operations and improve customer service experiences daily. Innovations in technology continue to transform industries, creating new jobs and opportunities everywhere.",
 }
 
+var thaiTexts = []string{
+	"ถึง แม้ ครู ของ คุณ อาจจะ บอก คุณ ว่า ไม่ มี ทาง ที่ ผิด ใน การ ใช้ บ่วง บาศ แต่ จริง แล้ว มัน มี ทาง ที่ ผิด",
+	"ท้อง ฟ้า สด ใส ดวง ดาว กำ ลัง ส่อง แสง ระ ยิบ ระ ยับ น้ำ ทะ เล ซัด เข้า หา ฝั่ง มัน เป็น ภาพ ที่ สวย งาม",
+	"การ ออก กำ ลัง กาย เป็น ประ จำ เป็น สิ่ง สำ คัญ สำ หรับ การ รัก ษา สุข ภาพ ที่ ดี",
+	"การ นอน หลับ อย่าง มี คุณ ภาพ ช่วย ให้ ร่าง กาย ฟื้น ตัว และ เสริม สร้าง สมาธิ และ อารมณ์ ให้ สม ดุล",
+	"โลก หมุน ไป ทุก วัน แต่ ความ รัก และ มิตร ภาพ ยัง คง อยู่ เสมอ",
+	"แสง แดด ยาม เช้า สาด ส่อง ลง มา บน ทุ่ง ข้าว เขียว ขจี เป็น ภาพ ที่ งด งาม จน เกิน บรร ยาย",
+}
+
 func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -46,7 +55,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	var username, roomID string
+	var username, roomID, language string
 	var data map[string]string
 	if err := conn.ReadJSON(&data); err != nil {
 		log.Println("Error reading username & roomID:", err)
@@ -54,8 +63,9 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	username = data["username"]
 	roomID = data["roomID"]
+	language = data["language"]
 
-	room := getOrCreateRoom(roomID)
+	room := getOrCreateRoom(roomID, language)
 	player := &models.Player{Conn: conn, Username: username, StartTime: time.Now(), Finished: false, Ready: false}
 
 	room.Mutex.Lock()
@@ -162,11 +172,18 @@ func calculateWPM(player *models.Player) float64 {
 	return float64(player.WordCount) / elapsedMinutes
 }
 
-func getOrCreateRoom(roomID string) *models.Room {
+func getOrCreateRoom(roomID string, language string) *models.Room {
 	if _, exists := rooms[roomID]; !exists {
+		var selectedText string
+		if language == "th" {
+			selectedText = thaiTexts[rand.Intn(len(thaiTexts))] // เลือกข้อความภาษาไทยแบบสุ่ม
+		} else {
+			selectedText = texts[rand.Intn(len(texts))] // เลือกข้อความภาษาอังกฤษแบบสุ่ม
+		}
+
 		rooms[roomID] = &models.Room{
 			Players: make(map[*websocket.Conn]*models.Player),
-			Text:    texts[rand.Intn(len(texts))],
+			Text:    selectedText,
 		}
 	}
 	return rooms[roomID]
