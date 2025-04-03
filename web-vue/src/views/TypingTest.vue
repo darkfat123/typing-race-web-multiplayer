@@ -37,6 +37,7 @@ export default {
         return {
             username: "",
             roomID: "",
+            language: "",
             inputText: "",
             givenText: "",
             playersInRoom: [],
@@ -54,9 +55,9 @@ export default {
         };
     },
     created() {
-        // Retrieve username & roomID from sessionStorage, not from URL
         this.username = sessionStorage.getItem("username") || "";
         this.roomID = sessionStorage.getItem("roomID") || "";
+        this.language = sessionStorage.getItem("language") || "";
 
         if (!this.username || !this.roomID) {
             alert("Invalid username or room ID!");
@@ -68,9 +69,8 @@ export default {
     },
     methods: {
         goBack() {
-            // Send a close message and then close the WebSocket connection
             if (this.ws && this.connected) {
-                const message = { type: "close", username: this.username, roomID: this.roomID };
+                const message = { type: "close", username: this.username, roomID: this.roomID, language: this.language };
                 this.ws.send(JSON.stringify(message)); // Notify backend before closing
                 this.ws.close();
             }
@@ -87,7 +87,7 @@ export default {
                 this.connected = true;
                 this.isReady = false;
                 this.isGameStarted = false;
-                this.ws.send(JSON.stringify({ username: this.username, roomID: this.roomID }));
+                this.ws.send(JSON.stringify({ username: this.username, roomID: this.roomID, language: this.language }));
             };
 
             this.ws.onmessage = (event) => {
@@ -119,7 +119,7 @@ export default {
             };
 
             this.ws.onclose = (event) => {
-                if (event.code !== 1000) { // Ensure it's a normal closure
+                if (event.code !== 1000) {
                     console.log("WebSocket closed unexpectedly");
                 }
                 this.connected = false;
@@ -143,7 +143,7 @@ export default {
     },
     beforeUnmount() {
         if (this.ws) {
-            const message = { type: "close", username: this.username, roomID: this.roomID };
+            const message = { type: "close", username: this.username, roomID: this.roomID, language: this.language };
             this.ws.send(JSON.stringify(message));
             this.ws.close();
         }
@@ -251,7 +251,8 @@ export default {
     color: #A0C878;
 }
 .incorrect {
-    color: #D2665A;
+    background-color: #D2665A;
+    color: black;
 }
 
 
