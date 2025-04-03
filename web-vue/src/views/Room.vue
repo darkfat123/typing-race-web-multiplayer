@@ -22,11 +22,9 @@
           return;
         }
   
-        // Save username and roomID to sessionStorage for better security
         sessionStorage.setItem("username", this.username);
         sessionStorage.setItem("roomID", this.roomID);
   
-        // Navigate to TypingTest.vue
         this.$router.push("/typing-test");
       },
     },
@@ -38,10 +36,10 @@
 
 <style>
 .room-container {
-  background: white;
+  background: var(--bg-color);
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0px 8px var(--shadow-color); /* ใช้ตัวแปรสีเงา */
   text-align: center;
   width: 100%;
   max-width: 1000px;

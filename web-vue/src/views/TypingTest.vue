@@ -151,9 +151,6 @@ export default {
 };
 </script>
 
-
-
-
 <style>
 .input {
     width: 100%;
@@ -166,7 +163,7 @@ export default {
 .button-container {
     display: flex;
     gap: 10px;
-    /* Adds space between buttons */
+   margin-top: 10px;
 }
 
 .btn-back {
@@ -195,10 +192,10 @@ export default {
 
 .typing-container {
     margin-top: 20px;
-    background: white;
+    background: var(--bg-color);
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0px 8px var(--shadow-color);
     width: 100%;
     max-width: 1000px;
     text-align: center;
@@ -207,7 +204,7 @@ export default {
 .typing-text {
     font-size: 1.4em;
 
-    background: #eef;
+    background: var(--bg-color);
     padding: 10px;
     border-radius: 5px;
     margin: 10px 0;
@@ -227,7 +224,7 @@ export default {
 }
 
 .wpm-list li {
-    background: #ddd;
+    background: var(--bg-color);
     margin: 5px 0;
     padding: 5px;
     border-radius: 5px;
@@ -241,20 +238,20 @@ export default {
 }
 
 .player-list li {
-    background: #ddd;
+    background: transparent;
     margin: 5px;
     padding: 5px;
+    box-shadow: 0 0px 8px var(--shadow-color);
     border-radius: 5px;
     width: calc(33.33% - 10px);
-    /* Ensures 3 items per row */
     box-sizing: border-box;
 }
 
 .correct {
-    background-color: #A0C878;
+    color: #A0C878;
 }
 .incorrect {
-    background-color: #D2665A;
+    color: #D2665A;
 }
 
 
