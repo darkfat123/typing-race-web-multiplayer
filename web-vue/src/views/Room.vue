@@ -85,6 +85,7 @@ export default {
 }
 
 .language-selector {
+  gap: 10px;
   display: flex;
   justify-content: space-between;
   width: 100%;
@@ -100,7 +101,6 @@ export default {
   background-color: transparent;
   cursor: pointer;
   transition: background-color 0.1s ease;
-  margin: 0 5px;
 }
 
 .lang-btn.selected {

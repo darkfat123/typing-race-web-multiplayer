@@ -66,7 +66,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	language = data["language"]
 
 	room := getOrCreateRoom(roomID, language)
-	player := &models.Player{Conn: conn, Username: username, StartTime: time.Now(), Finished: false, Ready: false}
+	player := &models.Player{Conn: conn, Username: username, StartTime: time.Time{}, Finished: false, Ready: false}
 
 	room.Mutex.Lock()
 	room.Players[conn] = player
@@ -159,8 +159,15 @@ func isAllPlayersReady(room *models.Room) bool {
 		}
 	}
 
-	// All players are ready, lock the room
+	// All players are ready
 	room.Locked = true
+	now := time.Now()
+
+	// Set StartTime for each player
+	for _, player := range room.Players {
+		player.StartTime = now
+	}
+
 	return true
 }
 
