@@ -1,6 +1,7 @@
-package models
+package model
 
 import (
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -13,4 +14,11 @@ type Player struct {
 	WordCount int
 	Finished  bool
 	Ready     bool
+}
+
+type Room struct {
+	Players map[*websocket.Conn]*Player
+	Text    string
+	Mutex   sync.Mutex
+	Locked  bool
 }
