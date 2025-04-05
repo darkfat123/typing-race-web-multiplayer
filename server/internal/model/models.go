@@ -17,8 +17,10 @@ type Player struct {
 }
 
 type Room struct {
-	Players map[*websocket.Conn]*Player
-	Text    string
-	Mutex   sync.Mutex
-	Locked  bool
+	ID       string
+	Language string
+	Players  map[*websocket.Conn]*Player
+	Text     string
+	Mutex    sync.Mutex
+	Locked   bool
 }

@@ -143,8 +143,6 @@ export default {
     },
     beforeUnmount() {
         if (this.ws) {
-            const message = { type: "close", username: this.username, roomID: this.roomID, language: this.language };
-            this.ws.send(JSON.stringify(message));
             this.ws.close();
         }
     },

@@ -5,52 +5,70 @@ import (
 	"math/rand"
 	"server/internal/model"
 	"server/pkg/texts"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
 )
 
-var rooms = make(map[string]*model.Room)
+var (
+	rooms      = make(map[string]*model.Room)
+	roomIdList = make(map[string][]string)
+)
 
-func GetOrCreateRoom(roomID string, language string) *model.Room {
-	if _, exists := rooms[roomID]; !exists {
-		var selectedText string
-		if language == "th" {
-			selectedText = texts.ThaiTexts[rand.Intn(len(texts.ThaiTexts))]
-		} else {
-			selectedText = texts.EngTexts[rand.Intn(len(texts.EngTexts))]
+// GetOrCreateRoom retrieves an existing room or creates a new one if it doesn't exist.
+func GetOrCreateRoom(roomID, language string) *model.Room {
+	room, exists := rooms[roomID]
+	if !exists {
+		selectedText := getRandomText(language)
+		room = &model.Room{
+			ID:       roomID,
+			Language: language,
+			Players:  make(map[*websocket.Conn]*model.Player),
+			Text:     selectedText,
 		}
-
-		rooms[roomID] = &model.Room{
-			Players: make(map[*websocket.Conn]*model.Player),
-			Text:    selectedText,
-		}
+		rooms[roomID] = room
 	}
-	return rooms[roomID]
+	return room
 }
 
+// getRandomText selects a random text based on the provided language.
+func getRandomText(language string) string {
+	if language == "th" {
+		return texts.ThaiTexts[rand.Intn(len(texts.ThaiTexts))]
+	}
+	return texts.EngTexts[rand.Intn(len(texts.EngTexts))]
+}
+
+// UpdateUserList updates the user list of the room and broadcasts the new list.
 func UpdateUserList(room *model.Room) {
 	room.Mutex.Lock()
-	var usernames []string
-	for _, player := range room.Players {
-		usernames = append(usernames, player.Username)
-	}
+	usernames := getUsernamesFromRoom(room)
 	room.Mutex.Unlock()
 
+	// Update user list in roomIdList
+	roomIdList[room.ID] = usernames
+
+	// Broadcast updated user list
 	Broadcast(room, map[string]interface{}{
 		"type":  "update_users",
 		"users": usernames,
 	})
 }
 
+// getUsernamesFromRoom returns a list of usernames from the room.
+func getUsernamesFromRoom(room *model.Room) []string {
+	var usernames []string
+	for _, player := range room.Players {
+		usernames = append(usernames, player.Username)
+	}
+	return usernames
+}
+
+// UpdateReadyStatus updates the ready status of players and broadcasts the ready users.
 func UpdateReadyStatus(room *model.Room) {
 	room.Mutex.Lock()
-	var readyUsers []string
-	for _, player := range room.Players {
-		if player.Ready {
-			readyUsers = append(readyUsers, player.Username)
-		}
-	}
+	readyUsers := getReadyUsersFromRoom(room)
 	room.Mutex.Unlock()
 
 	Broadcast(room, map[string]interface{}{
@@ -59,6 +77,18 @@ func UpdateReadyStatus(room *model.Room) {
 	})
 }
 
+// getReadyUsersFromRoom returns a list of players who are ready in the room.
+func getReadyUsersFromRoom(room *model.Room) []string {
+	var readyUsers []string
+	for _, player := range room.Players {
+		if player.Ready {
+			readyUsers = append(readyUsers, player.Username)
+		}
+	}
+	return readyUsers
+}
+
+// Broadcast sends a message to all players in the room.
 func Broadcast(room *model.Room, message interface{}) {
 	room.Mutex.Lock()
 	defer room.Mutex.Unlock()
@@ -70,6 +100,7 @@ func Broadcast(room *model.Room, message interface{}) {
 	}
 }
 
+// IsAllPlayersReady checks if all players are ready and locks the room if they are.
 func IsAllPlayersReady(room *model.Room) bool {
 	room.Mutex.Lock()
 	defer room.Mutex.Unlock()
@@ -97,15 +128,32 @@ func IsAllPlayersReady(room *model.Room) bool {
 	return true
 }
 
+// CleanupPlayer removes a player from the room and deletes the room if empty.
 func CleanupPlayer(room *model.Room, conn *websocket.Conn, roomID string) {
 	room.Mutex.Lock()
 	delete(room.Players, conn)
 	room.Mutex.Unlock()
-	UpdateUserList(room)
 
 	// Remove empty rooms
 	if len(room.Players) == 0 {
 		log.Printf("Room %s is empty. Deleting room", roomID)
 		delete(rooms, roomID)
 	}
+
+	UpdateUserList(room)
+}
+
+// GetRoomIdList returns the mapping of room IDs to usernames and logs the room user mappings.
+func GetRoomIdList() map[string][]string {
+	log.Println("=== Room User Mapping ===")
+
+	if len(roomIdList) == 0 {
+		log.Println("No rooms found.")
+	} else {
+		for roomID, users := range roomIdList {
+			log.Printf("Room %s → [%s]", roomID, strings.Join(users, ", "))
+		}
+	}
+
+	return roomIdList
 }
