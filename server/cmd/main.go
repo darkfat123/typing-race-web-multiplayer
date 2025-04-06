@@ -14,7 +14,8 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	http.HandleFunc("/ws", handler.HandleWebSocket)
+	http.HandleFunc("/ws/lobby", handler.HandleLobbyWebSocket)
+	http.HandleFunc("/ws/typing", handler.HandleTypingWebSocket)
 	fmt.Println("Server started on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

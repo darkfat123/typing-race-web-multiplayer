@@ -1,10 +1,10 @@
 <template>
   <div class="room-container">
     <h2>Typing Test Room: {{ roomID || 'Not Joined' }}</h2>
-    
+
     <input v-model="username" placeholder="Enter username" class="input" />
     <input v-model="roomID" placeholder="Enter room ID" class="input" />
-    
+
     <div class="language-selector">
       <button :class="['lang-btn', { selected: language === 'th' }]" @click="selectLanguage('th')">
         TH
@@ -16,6 +16,19 @@
 
     <button @click="joinRoom" class="btn">Join Room</button>
   </div>
+  <div class="room-list">
+    <h3>Available Rooms</h3>
+    <div v-if="Object.keys(roomList).length === 0">
+      <p>No active rooms.</p>
+    </div>
+    <div v-else>
+      <div v-for="(users, roomID) in roomList" :key="roomID" class="room-card">
+        <h4>Room ID: {{ roomID }}</h4>
+        <p>Users: {{ users.join(", ") }}</p>
+        <button @click="roomID = roomID">Join This Room</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -25,28 +38,45 @@ export default {
       username: "",
       roomID: "",
       language: "th",
+      roomList: {}, // เพิ่ม state เพื่อเก็บ room list
+      socket: null,
     };
+  },
+  mounted() {
+    this.connectWebSocket();
   },
   methods: {
     selectLanguage(lang) {
       this.language = lang;
     },
-
-    // ฟังก์ชันที่ใช้ในการเข้าห้อง
     joinRoom() {
       if (!this.username || !this.roomID) {
         alert("Enter username and room ID!");
         return;
       }
-
       sessionStorage.setItem("username", this.username);
       sessionStorage.setItem("roomID", this.roomID);
       sessionStorage.setItem("language", this.language);
-
       this.$router.push("/typing-test");
+    },
+
+    connectWebSocket() {
+      this.socket = new WebSocket(import.meta.env.VITE_WS_URL + "/ws/lobby");
+
+      this.socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === "room_list") {
+          this.roomList = data.roomList; // เก็บ room list
+        }
+      };
+
+      this.socket.onerror = (err) => {
+        console.error("WebSocket error:", err);
+      };
     },
   },
 };
+
 </script>
 
 <style scoped>
@@ -112,6 +142,15 @@ export default {
   color: black;
   background-color: #f1f1f1;
 }
+
+.room-card {
+  border: 1px solid #ccc;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  background: #f9f9f9;
+}
+
 
 @media (max-width: 600px) {
   .room-container {

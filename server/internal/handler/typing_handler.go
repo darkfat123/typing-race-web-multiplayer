@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
+func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := Upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("WebSocket upgrade error:", err)

@@ -81,7 +81,7 @@ export default {
                 this.ws.close();
             }
 
-            this.ws = new WebSocket(import.meta.env.VITE_WS_URL + "/ws");
+            this.ws = new WebSocket(import.meta.env.VITE_WS_URL + "/ws/typing");
 
             this.ws.onopen = () => {
                 this.connected = true;
