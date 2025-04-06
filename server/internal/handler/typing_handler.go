@@ -31,6 +31,7 @@ func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	room := logic.GetOrCreateRoom(roomID, language)
 	player := &model.Player{Conn: conn, Username: username, StartTime: time.Time{}, Finished: false, Ready: false}
+	JoinRoom(roomID, player.Username)
 
 	room.Mutex.Lock()
 	room.Players[conn] = player
@@ -96,5 +97,6 @@ func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Cleanup when player leaves
+	RemoveUserFromRoom(roomID, player.Username)
 	logic.CleanupPlayer(room, conn, roomID)
 }

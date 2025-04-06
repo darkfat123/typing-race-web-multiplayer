@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"server/internal/model"
 	"server/pkg/texts"
-	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -13,7 +12,7 @@ import (
 
 var (
 	rooms      = make(map[string]*model.Room)
-	roomIdList = make(map[string][]string)
+	RoomIdList = make(map[string][]string)
 )
 
 // GetOrCreateRoom retrieves an existing room or creates a new one if it doesn't exist.
@@ -47,7 +46,7 @@ func UpdateUserList(room *model.Room) {
 	room.Mutex.Unlock()
 
 	// Update user list in roomIdList
-	roomIdList[room.ID] = usernames
+	RoomIdList[room.ID] = usernames
 
 	// Broadcast updated user list
 	Broadcast(room, map[string]interface{}{
@@ -141,19 +140,4 @@ func CleanupPlayer(room *model.Room, conn *websocket.Conn, roomID string) {
 	}
 
 	UpdateUserList(room)
-}
-
-// GetRoomIdList returns the mapping of room IDs to usernames and logs the room user mappings.
-func GetRoomIdList() map[string][]string {
-	log.Println("=== Room User Mapping ===")
-
-	if len(roomIdList) == 0 {
-		log.Println("No rooms found.")
-	} else {
-		for roomID, users := range roomIdList {
-			log.Printf("Room %s → [%s]", roomID, strings.Join(users, ", "))
-		}
-	}
-
-	return roomIdList
 }

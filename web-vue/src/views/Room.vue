@@ -16,16 +16,17 @@
 
     <button @click="joinRoom" class="btn">Join Room</button>
   </div>
+
   <div class="room-list">
     <h3>Available Rooms</h3>
-    <div v-if="Object.keys(roomList).length === 0">
+    <div v-if="Object.keys(filteredRoomList).length === 0">
       <p>No active rooms.</p>
     </div>
     <div v-else>
-      <div v-for="(users, roomID) in roomList" :key="roomID" class="room-card">
+      <div v-for="(users, roomID) in filteredRoomList" :key="roomID" class="room-card">
         <h4>Room ID: {{ roomID }}</h4>
-        <p>Users: {{ users.join(", ") }}</p>
-        <button @click="roomID = roomID">Join This Room</button>
+        <p v-if="users && users.length > 0">Users: {{ users.join(", ") }}</p>
+        <button @click="joinRoom">Join This Room</button>
       </div>
     </div>
   </div>
@@ -44,6 +45,18 @@ export default {
   },
   mounted() {
     this.connectWebSocket();
+  },
+  computed: {
+    // กรองเฉพาะห้องที่มีผู้ใช้อยู่
+    filteredRoomList() {
+      const filtered = {};
+      for (const [roomID, users] of Object.entries(this.roomList)) {
+        if (users && users.length > 0) {
+          filtered[roomID] = users;
+        }
+      }
+      return filtered;
+    },
   },
   methods: {
     selectLanguage(lang) {
@@ -66,7 +79,7 @@ export default {
       this.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === "room_list") {
-          this.roomList = data.roomList; // เก็บ room list
+          this.roomList = data.roomList;
         }
       };
 
@@ -76,8 +89,8 @@ export default {
     },
   },
 };
-
 </script>
+
 
 <style scoped>
 .room-container {
