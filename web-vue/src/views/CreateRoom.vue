@@ -8,10 +8,10 @@
 
     <div class="language-selector">
       <button :class="['lang-btn', { selected: language === 'th' }]" @click="selectLanguage('th')">
-        TH
+        Thai
       </button>
       <button :class="['lang-btn', { selected: language === 'en' }]" @click="selectLanguage('en')">
-        EN
+        English
       </button>
     </div>
 
@@ -40,7 +40,7 @@ export default {
     },
     joinRoom() {
       if (!this.username) {
-        alert("Enter username and room ID!");
+        alert("Enter username!");
         return;
       }
       sessionStorage.setItem("username", this.username);
@@ -72,17 +72,24 @@ export default {
 }
 
 .btn {
-  width: 100%;
-  padding: 10px;
-  background: #28a745;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+    width: 100%;
+    padding: 10px;
+    font-weight: bold;
+    background-color: var(--main-btn-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    box-shadow: 0 0px 8px var(--shadow-color);
+    transition: background-color 0.3s, color 0.3s;
+    text-align: center;
+    transition: background 0.3s ease, transform 0.2s ease;
 }
 
 .btn:hover {
-  background: #218838;
+    background: linear-gradient(to right,  var(--text-color), goldenrod);
+    transform: scale(1.01);
 }
 
 .language-selector {
@@ -101,21 +108,30 @@ export default {
   color: var(--text-color);
   background-color: transparent;
   cursor: pointer;
-  transition: background-color 0.1s ease;
+  transition: background 0.3s ease, transform 0.2s ease;
 }
 
 .lang-btn.selected {
-  background-color: #4CAF50;
-  color: white;
+  background-color: var(--main-btn-color);
+  color: var(--text-color);
 }
 
 .lang-btn:hover {
   color: black;
   background-color: #f1f1f1;
+  transform: scale(1.01);
 }
 
 .back-btn {
   background-color: rgb(153, 33, 33);
+  position: absolute;
+  width: 100px;
+  color: white;
+}
+
+.back-btn:hover { 
+  background: none;
+  background-color: var(--text-color);
   position: absolute;
   width: 100px;
 }

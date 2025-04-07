@@ -25,19 +25,21 @@ func init() {
 
 // GetOrCreateRoom retrieves an existing room or creates a new one if it doesn't exist.
 func GetOrCreateRoom(roomIDInput string, language string) *model.Room {
-	// This room ID exist? join instead of create new room
+	// ถ้า roomIDInput มีอยู่แล้ว ก็ return ห้องเดิม
 	if room, exists := rooms[roomIDInput]; exists {
 		return room
 	}
 
 	selectedText := getRandomText(language)
+	randomID := RandomRoomId() // สุ่ม ID ก่อน
+
 	room := &model.Room{
-		ID:       roomIDInput,
+		ID:       randomID, // ใช้ ID ที่สุ่มมา
 		Language: language,
 		Players:  make(map[*websocket.Conn]*model.Player),
 		Text:     selectedText,
 	}
-	rooms[roomIDInput] = room
+	rooms[randomID] = room // เก็บใน map โดยใช้ random ID
 
 	return room
 }
