@@ -23,7 +23,6 @@ header {
   background: var(--bg-color);
   color: var(--text-color);
   box-shadow: 0 0px 8px var(--shadow-color);
-  margin-bottom: 20px;
 }
 
 button {

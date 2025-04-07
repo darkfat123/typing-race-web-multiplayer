@@ -59,7 +59,7 @@ export default {
         this.roomID = sessionStorage.getItem("roomID") || "";
         this.language = sessionStorage.getItem("language") || "";
 
-        if (!this.username || !this.roomID) {
+        if (!this.username) {
             alert("Invalid username or room ID!");
             this.$router.push("/");
             return;
@@ -81,7 +81,7 @@ export default {
                 this.ws.close();
             }
 
-            this.ws = new WebSocket(import.meta.env.VITE_WS_URL + "/ws");
+            this.ws = new WebSocket(import.meta.env.VITE_WS_URL + "/ws/typing");
 
             this.ws.onopen = () => {
                 this.connected = true;
@@ -143,8 +143,6 @@ export default {
     },
     beforeUnmount() {
         if (this.ws) {
-            const message = { type: "close", username: this.username, roomID: this.roomID, language: this.language };
-            this.ws.send(JSON.stringify(message));
             this.ws.close();
         }
     },
