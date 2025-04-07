@@ -1,7 +1,7 @@
 <template>
   <div class="room-container">
     <div class="row">
-      <MenuButton label="Back" to="/" class="back-btn" />
+      <MenuButton label="Back" to="/" class="back-btn" @click="handleBack" />
       <h3 class="new-rooms">Create New Room</h3>
     </div>
     <input v-model="username" placeholder="Enter username" class="input" />
@@ -38,6 +38,9 @@ export default {
     selectLanguage(lang) {
       this.language = lang;
     },
+    handleBack() {
+      sessionStorage.removeItem("roomID")
+    },
     joinRoom() {
       if (!this.username) {
         alert("Enter username!");
@@ -72,24 +75,24 @@ export default {
 }
 
 .btn {
-    width: 100%;
-    padding: 10px;
-    font-weight: bold;
-    background-color: var(--main-btn-color);
-    color: var(--text-color);
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    box-shadow: 0 0px 8px var(--shadow-color);
-    transition: background-color 0.3s, color 0.3s;
-    text-align: center;
-    transition: background 0.3s ease, transform 0.2s ease;
+  width: 100%;
+  padding: 10px;
+  font-weight: bold;
+  background-color: var(--main-btn-color);
+  color: var(--text-color);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  box-shadow: 0 0px 8px var(--shadow-color);
+  transition: background-color 0.3s, color 0.3s;
+  text-align: center;
+  transition: background 0.3s ease, transform 0.2s ease;
 }
 
 .btn:hover {
-    background: linear-gradient(to right,  var(--text-color), goldenrod);
-    transform: scale(1.01);
+  background: linear-gradient(to right, var(--text-color), goldenrod);
+  transform: scale(1.01);
 }
 
 .language-selector {
@@ -129,7 +132,7 @@ export default {
   color: white;
 }
 
-.back-btn:hover { 
+.back-btn:hover {
   background: none;
   background-color: var(--text-color);
   position: absolute;

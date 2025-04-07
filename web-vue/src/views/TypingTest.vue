@@ -15,11 +15,7 @@
     <div v-if="connected && isGameStarted" class="typing-container">
         <h3>Type this message:</h3>
         <p class="typing-text">
-            <span
-                v-for="(char, index) in givenText"
-                :key="index"
-                :class="getCharClass(index)"
-            >
+            <span v-for="(char, index) in givenText" :key="index" :class="getCharClass(index)">
                 {{ char }}
             </span>
         </p>
@@ -28,6 +24,10 @@
         <ul class="wpm-list">
             <li v-for="(wpm, user) in wpmData" :key="user">{{ user }}: {{ wpm }} WPM</li>
         </ul>
+    </div>
+
+    <div v-if="isCountingDown" class="overlay">
+        <div class="countdown">{{ countdownValue }}</div>
     </div>
 </template>
 
@@ -47,10 +47,18 @@ export default {
             connected: false,
             isReady: false,
             isGameStarted: false,
+            countdown: null,
+            countdownValue: 3,
+            isCountingDown: false,
             finishSound: (() => {
                 const sound = new Audio("/complete.wav");
                 sound.volume = 0.45;
                 return sound;
+            })(),
+            startSound: (() => {
+                const startsound = new Audio("/countdown.mp3");
+                startsound.volume = 0.15;
+                return startsound;
             })(),
         };
     },
@@ -74,6 +82,7 @@ export default {
                 this.ws.send(JSON.stringify(message)); // Notify backend before closing
                 this.ws.close();
             }
+            sessionStorage.removeItem("roomID")
             this.$router.push('/');
         },
         connectWebSocket() {
@@ -101,7 +110,14 @@ export default {
                 }
                 if (data.type === "start_game") {
                     this.isGameStarted = true;
-                    alert("Game has started! Type the given text as fast as you can.");
+                    const startTime = Date.now();
+                    this.ws.send(JSON.stringify({
+                        type: 'game_start', 
+                        username: this.username,
+                        roomID: this.roomID,
+                        startTime: startTime
+                    }));
+                    this.startCountdown();
                 }
                 if (data.text) {
                     this.givenText = data.text;
@@ -140,6 +156,21 @@ export default {
                 this.ws.send(JSON.stringify({ status: "ready" }));
             }
         },
+        startCountdown() {
+            this.isCountingDown = true;
+            this.countdownValue = 3;
+            this.startSound.play();
+            this.countdown = setInterval(() => {
+                this.countdownValue--;
+                if (this.countdownValue === 0) {
+                    clearInterval(this.countdown);
+                    this.isCountingDown = false;
+                    this.isGameStarted = true;
+                }
+            }, 1000);
+        }
+
+
     },
     beforeUnmount() {
         if (this.ws) {
@@ -150,6 +181,38 @@ export default {
 </script>
 
 <style>
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.countdown {
+    font-size: 100px;
+    color: white;
+    font-weight: bold;
+    animation: scaleUp 0.8s ease-in-out;
+}
+
+@keyframes scaleUp {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
 .input {
     width: 100%;
     padding: 10px;
@@ -161,7 +224,7 @@ export default {
 .button-container {
     display: flex;
     gap: 10px;
-   margin-top: 10px;
+    margin-top: 10px;
 }
 
 .btn-back {
@@ -248,6 +311,7 @@ export default {
 .correct {
     color: #A0C878;
 }
+
 .incorrect {
     background-color: #D2665A;
     color: black;
