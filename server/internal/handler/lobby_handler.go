@@ -17,7 +17,6 @@ func broadcastRoomListToLobby() {
 	lobbyMutex.Lock()
 	defer lobbyMutex.Unlock()
 
-	// สร้าง roomList ใหม่โดยไม่รวมห้องที่ว่าง
 	validRoomList := make(map[string][]string)
 	for roomID, users := range logic.RoomIdList {
 		if len(users) > 0 {
@@ -25,17 +24,16 @@ func broadcastRoomListToLobby() {
 		}
 	}
 
-	// ตรวจสอบว่า validRoomList ยังมีห้องที่ไม่ว่างอยู่
-	log.Println("=== Room User Mapping ===")
+	log.Println("======= Room User Mapping =======")
 	if len(validRoomList) == 0 {
 		log.Println("No rooms found.")
 	} else {
 		for roomID, users := range validRoomList {
-			log.Printf("Room %s → [%s]", roomID, strings.Join(users, ", "))
+			log.Printf("🏠 Room %s → [%s]", roomID, strings.Join(users, ", "))
 		}
 	}
+	log.Println("=================================")
 
-	// ส่งข้อมูล room list ใหม่ที่ไม่มีห้องว่าง
 	message := map[string]interface{}{
 		"type":     "room_list",
 		"roomList": validRoomList,

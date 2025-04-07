@@ -110,13 +110,6 @@ export default {
                 }
                 if (data.type === "start_game") {
                     this.isGameStarted = true;
-                    const startTime = Date.now();
-                    this.ws.send(JSON.stringify({
-                        type: 'game_start', 
-                        username: this.username,
-                        roomID: this.roomID,
-                        startTime: startTime
-                    }));
                     this.startCountdown();
                 }
                 if (data.text) {
