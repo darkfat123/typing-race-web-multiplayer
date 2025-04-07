@@ -36,12 +36,14 @@ export default {
   --bg-color: white;
   --text-color: black;
   --shadow-color: rgba(0, 0, 0, 0.2);
+  --main-btn-color: goldenrod;
 }
 
 .dark-mode {
   --bg-color: #1a1a1a;
   --text-color: #e0e0e0;
   --shadow-color: rgba(255, 255, 255, 0.2);
+  --main-btn-color: rgb(172, 123, 0);
 }
 
 * {
