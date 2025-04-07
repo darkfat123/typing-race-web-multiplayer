@@ -1,45 +1,39 @@
 <template>
   <div class="room-container">
-    <h2>Typing Test Room: {{ roomID || 'Not Joined' }}</h2>
-
-    <input v-model="username" placeholder="Enter username" class="input" />
-    <input v-model="roomID" placeholder="Enter room ID" class="input" />
-
-    <div class="language-selector">
-      <button :class="['lang-btn', { selected: language === 'th' }]" @click="selectLanguage('th')">
-        TH
-      </button>
-      <button :class="['lang-btn', { selected: language === 'en' }]" @click="selectLanguage('en')">
-        EN
-      </button>
+    <div class="row">
+      <h3 class="available-rooms">Available Rooms</h3>
+      <MenuButton label="Create New Room" to="/create-room" class="create-room-btn" />
     </div>
 
-    <button @click="joinRoom" class="btn">Join Room</button>
-  </div>
-
-  <div class="room-list">
-    <h3>Available Rooms</h3>
     <div v-if="Object.keys(filteredRoomList).length === 0">
       <p>No active rooms.</p>
     </div>
-    <div v-else>
-      <div v-for="(users, roomID) in filteredRoomList" :key="roomID" class="room-card">
-        <h4>Room ID: {{ roomID }}</h4>
+
+    <ul v-else class="room-list">
+      <li v-for="(users, roomID) in filteredRoomList" :key="roomID" class="room-card">
+        <h4>🔑 Room ID: {{ roomID }}</h4>
         <p v-if="users && users.length > 0">Users: {{ users.join(", ") }}</p>
-        <button @click="joinRoom">Join This Room</button>
-      </div>
-    </div>
+        <div class="room-footer">
+          <button class="join-btn" @click="joinRoom(roomID)">Join This Room</button>
+        </div>
+      </li>
+    </ul>
   </div>
 </template>
 
 <script>
+import MenuButton from '../components/MenuButton.vue';
+
 export default {
+  components: {
+    MenuButton
+  },
   data() {
     return {
       username: "",
       roomID: "",
       language: "th",
-      roomList: {}, // เพิ่ม state เพื่อเก็บ room list
+      roomList: {},
       socket: null,
     };
   },
@@ -47,7 +41,6 @@ export default {
     this.connectWebSocket();
   },
   computed: {
-    // กรองเฉพาะห้องที่มีผู้ใช้อยู่
     filteredRoomList() {
       const filtered = {};
       for (const [roomID, users] of Object.entries(this.roomList)) {
@@ -101,73 +94,94 @@ export default {
   text-align: center;
   width: 100%;
   max-width: 1000px;
-  margin-left: 10px;
-  margin-right: 10px;
+  margin: 1rem 1rem 2rem 1rem;
+  position: relative;
 }
 
-.input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
-.btn {
-  width: 100%;
-  padding: 10px;
-  background: #28a745;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.btn:hover {
-  background: #218838;
-}
-
-.language-selector {
-  gap: 10px;
+.row {
   display: flex;
   justify-content: space-between;
-  width: 100%;
-  margin-bottom: 10px;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 20px;
 }
 
-.lang-btn {
-  flex: 1;
-  padding: 10px 0;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  color: var(--text-color);
-  background-color: transparent;
-  cursor: pointer;
-  transition: background-color 0.1s ease;
+.available-rooms {
+  margin: 0;
+  flex-grow: 1;
+  text-align: center;
 }
 
-.lang-btn.selected {
-  background-color: #4CAF50;
-  color: white;
+.create-room-btn {
+  position: absolute;
+  right: 20px;
+  width: auto;
 }
 
-.lang-btn:hover {
-  color: black;
-  background-color: #f1f1f1;
+.room-footer {
+  margin-top: auto;
+  /* ให้ปุ่มอยู่ติดขอบล่าง */
+}
+
+.room-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  padding: 0;
+  list-style: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .room-card {
-  border: 1px solid #ccc;
-  padding: 12px;
-  margin: 10px 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  padding: 1rem;
   border-radius: 8px;
-  background: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px var(--shadow-color);
+
+
+}
+
+.join-btn {
+  background: linear-gradient(to right, var(--text-color), #333333);
+  color: var(--bg-color);
+  padding: 0.6rem 1.2rem;
+  border: none;
+  width: 100%;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.join-btn:hover {
+  background: linear-gradient(to right, #333333, var(--text-color));
+  transform: scale(1.03);
 }
 
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .room-container {
     max-width: 100%;
+  }
+
+  .create-room-btn {
+    position: static;
+    margin: 10px 0;
+  }
+
+  .room-list {
+    grid-template-columns: 1fr;
+  }
+
+  .available-rooms {
+    margin: 0;
+    flex-grow: 1;
+    text-align: left;
   }
 }
 </style>

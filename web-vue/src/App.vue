@@ -35,13 +35,13 @@ export default {
 :root {
   --bg-color: white;
   --text-color: black;
-  --shadow-color: rgba(0, 0, 0, 0.2); /* เงาสีเข้มใน Light Mode */
+  --shadow-color: rgba(0, 0, 0, 0.2);
 }
 
 .dark-mode {
   --bg-color: #1a1a1a;
   --text-color: #e0e0e0;
-  --shadow-color: rgba(255, 255, 255, 0.2); /* เงาสีอ่อนใน Dark Mode */
+  --shadow-color: rgba(255, 255, 255, 0.2);
 }
 
 * {
@@ -50,10 +50,6 @@ export default {
   padding: 0;
   font-family: "IBM Plex Sans Thai Looped", sans-serif;
   transition: background 0.2s, color 0.2s;
-}
-
-h2 {
-  margin-bottom: 10px;
 }
 
 .main-container {
