@@ -16,11 +16,11 @@ var (
 )
 
 func init() {
-	RoomIdList = map[string][]string{
-		"room1": {"user1", "user2", "user3", "user4", "user5", "user6", "user7", "user8", "user9"},
-		"room2": {"user4", "user5"},
-		"room3": {"user6", "user7", "user8", "user9"},
-	}
+	// RoomIdList = map[string][]string{
+	// 	"room1": {"user1", "user2", "user3", "user4", "user5", "user6", "user7", "user8", "user9"},
+	// 	"room2": {"user4", "user5"},
+	// 	"room3": {"user6", "user7", "user8", "user9"},
+	// }
 }
 
 // GetOrCreateRoom retrieves an existing room or creates a new one if it doesn't exist.
