@@ -24,18 +24,21 @@ func init() {
 }
 
 // GetOrCreateRoom retrieves an existing room or creates a new one if it doesn't exist.
-func GetOrCreateRoom(roomID, language string) *model.Room {
-	room, exists := rooms[roomID]
-	if !exists {
-		selectedText := getRandomText(language)
-		room = &model.Room{
-			ID:       roomID,
-			Language: language,
-			Players:  make(map[*websocket.Conn]*model.Player),
-			Text:     selectedText,
-		}
-		rooms[roomID] = room
+func GetOrCreateRoom(roomIDInput string, language string) *model.Room {
+	// This room ID exist? join instead of create new room
+	if room, exists := rooms[roomIDInput]; exists {
+		return room
 	}
+
+	selectedText := getRandomText(language)
+	room := &model.Room{
+		ID:       roomIDInput,
+		Language: language,
+		Players:  make(map[*websocket.Conn]*model.Player),
+		Text:     selectedText,
+	}
+	rooms[roomIDInput] = room
+
 	return room
 }
 

@@ -19,19 +19,19 @@ func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	var username, roomID, language string
+	var username, roomIDInput, language string
 	var data map[string]string
 	if err := conn.ReadJSON(&data); err != nil {
 		log.Println("Error reading username & roomID:", err)
 		return
 	}
 	username = data["username"]
-	roomID = data["roomID"]
+	roomIDInput = data["roomID"]
 	language = data["language"]
 
-	room := logic.GetOrCreateRoom(roomID, language)
+	room := logic.GetOrCreateRoom(roomIDInput, language)
 	player := &model.Player{Conn: conn, Username: username, StartTime: time.Time{}, Finished: false, Ready: false}
-	JoinRoom(roomID, player.Username)
+	JoinRoom(room.ID, player.Username)
 
 	room.Mutex.Lock()
 	room.Players[conn] = player
@@ -42,7 +42,7 @@ func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error sending text:", err)
 	}
 
-	log.Printf("Player %s has joined room %s", player.Username, roomID)
+	log.Printf("Player %s has joined room %s", player.Username, room.ID)
 
 	logic.UpdateUserList(room)
 	logic.UpdateReadyStatus(room)
@@ -60,7 +60,7 @@ func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if message["type"] == "close" {
-			log.Printf("%s is leaving from Room No. %s, closing connection", player.Username, roomID)
+			log.Printf("%s is leaving from Room No. %s, closing connection", player.Username, room.ID)
 			conn.Close()
 			break
 		}
@@ -70,11 +70,11 @@ func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 			player.Ready = true
 			room.Mutex.Unlock()
 
-			log.Printf("Player %s in room %s is ready", player.Username, roomID)
+			log.Printf("Player %s in room %s is ready", player.Username, room.ID)
 			logic.UpdateReadyStatus(room)
 
 			if logic.IsAllPlayersReady(room) {
-				log.Printf("All players in room %s are ready. Starting the game!", roomID)
+				log.Printf("All players in room %s are ready. Starting the game!", room.ID)
 				logic.Broadcast(room, map[string]string{"type": "start_game"})
 			}
 		}
@@ -85,7 +85,7 @@ func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 				player.Finished = true
 				wpm := logic.CalculateWPM(player)
 
-				log.Printf("Player %s in room %s has finished typing with WPM: %.2f", player.Username, roomID, wpm)
+				log.Printf("Player %s in room %s has finished typing with WPM: %.2f", player.Username, room.ID, wpm)
 
 				logic.Broadcast(room, map[string]interface{}{
 					"type":     "finished",
@@ -97,6 +97,6 @@ func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Cleanup when player leaves
-	RemoveUserFromRoom(roomID, player.Username)
-	logic.CleanupPlayer(room, conn, roomID)
+	RemoveUserFromRoom(room.ID, player.Username)
+	logic.CleanupPlayer(room, conn, room.ID)
 }

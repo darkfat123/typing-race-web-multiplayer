@@ -5,7 +5,6 @@
       <h3 class="new-rooms">Create New Room</h3>
     </div>
     <input v-model="username" placeholder="Enter username" class="input" />
-    <input v-model="roomID" placeholder="Enter room ID" class="input" />
 
     <div class="language-selector">
       <button :class="['lang-btn', { selected: language === 'th' }]" @click="selectLanguage('th')">
@@ -30,7 +29,6 @@ export default {
   data() {
     return {
       username: "",
-      roomID: "",
       language: "th",
       roomList: {},
       socket: null,
@@ -41,12 +39,11 @@ export default {
       this.language = lang;
     },
     joinRoom() {
-      if (!this.username || !this.roomID) {
+      if (!this.username) {
         alert("Enter username and room ID!");
         return;
       }
       sessionStorage.setItem("username", this.username);
-      sessionStorage.setItem("roomID", this.roomID);
       sessionStorage.setItem("language", this.language);
       this.$router.push("/typing-test");
     },

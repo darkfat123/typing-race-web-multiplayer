@@ -59,7 +59,7 @@ export default {
         this.roomID = sessionStorage.getItem("roomID") || "";
         this.language = sessionStorage.getItem("language") || "";
 
-        if (!this.username || !this.roomID) {
+        if (!this.username) {
             alert("Invalid username or room ID!");
             this.$router.push("/");
             return;
