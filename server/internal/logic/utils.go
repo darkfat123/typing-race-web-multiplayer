@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"log"
 	"math/rand"
 	"server/internal/model"
 	"strconv"
@@ -8,10 +9,15 @@ import (
 )
 
 func CalculateWPM(player *model.Player) float64 {
-	elapsedMinutes := time.Since(player.StartTime).Minutes()
+	elapsedSeconds := time.Since(player.StartTime).Seconds() - 3
+	elapsedMinutes := elapsedSeconds / 60
+
 	if elapsedMinutes == 0 {
 		return 0
 	}
+	log.Printf("Elapsed time for %s in minutes: %f", player.Username, elapsedMinutes)
+	log.Printf("Word count for %s: %d", player.Username, player.WordCount)
+
 	return float64(player.WordCount) / elapsedMinutes
 }
 
