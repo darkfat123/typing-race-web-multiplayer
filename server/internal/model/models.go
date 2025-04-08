@@ -23,4 +23,5 @@ type Room struct {
 	Text     string
 	Mutex    sync.Mutex
 	Locked   bool
+	Limit    int
 }

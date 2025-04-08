@@ -36,7 +36,9 @@
 
 <script>
 import MenuButton from '../components/MenuButton.vue';
-
+sessionStorage.removeItem("username")
+sessionStorage.removeItem("language")
+sessionStorage.removeItem("roomID")
 export default {
   components: {
     MenuButton

@@ -82,6 +82,8 @@ export default {
                 this.ws.send(JSON.stringify(message)); // Notify backend before closing
                 this.ws.close();
             }
+            sessionStorage.removeItem("username")
+            sessionStorage.removeItem("language")
             sessionStorage.removeItem("roomID")
             this.$router.push('/');
         },
@@ -96,7 +98,7 @@ export default {
                 this.connected = true;
                 this.isReady = false;
                 this.isGameStarted = false;
-                this.ws.send(JSON.stringify({ username: this.username, roomID: this.roomID, language: this.language }));
+                this.ws.send(JSON.stringify({ username: this.username, roomID: this.roomID, language: this.language, limit: localStorage.getItem("max_players") }));
             };
 
             this.ws.onmessage = (event) => {

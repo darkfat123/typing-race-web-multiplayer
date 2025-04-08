@@ -15,14 +15,6 @@ var (
 	RoomIdList = make(map[string][]string)
 )
 
-func init() {
-	// RoomIdList = map[string][]string{
-	// 	"room1": {"user1", "user2", "user3", "user4", "user5", "user6", "user7", "user8", "user9"},
-	// 	"room2": {"user4", "user5"},
-	// 	"room3": {"user6", "user7", "user8", "user9"},
-	// }
-}
-
 // GetOrCreateRoom retrieves an existing room or creates a new one if it doesn't exist.
 func GetOrCreateRoom(roomIDInput string, language string) *model.Room {
 	// ถ้า roomIDInput มีอยู่แล้ว ก็ return ห้องเดิม
