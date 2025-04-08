@@ -26,8 +26,8 @@
         <h3>Enter Your Username</h3>
         <input v-model="username" placeholder="Username" class="input" />
         <div class="modal-buttons">
-          <button @click="confirmJoin" class="btn">Join</button>
           <button @click="closeModal" class="btn cancel">Cancel</button>
+          <button @click="confirmJoin" class="btn">Join</button>
         </div>
       </div>
     </div>
@@ -132,6 +132,7 @@ export default {
 }
 
 .create-room-btn {
+  background-color: var(--main-btn-color);
   color: var(--text-color);
   position: absolute;
   right: 20px;

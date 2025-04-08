@@ -36,7 +36,7 @@ export default {
   --bg-color: white;
   --text-color: black;
   --shadow-color: rgba(0, 0, 0, 0.2);
-  --main-btn-color: goldenrod;
+  --main-btn-color: rgb(255, 183, 0);
 }
 
 .dark-mode {
