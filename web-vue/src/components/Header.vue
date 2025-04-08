@@ -1,6 +1,6 @@
 <template>
     <header>
-        <h1>Typing Race Multiplayer</h1>
+        <h1>{{ displayedText }}</h1>
         <div>
             <input type="checkbox" class="checkbox" id="checkbox" @change="toggleDarkMode" />
             <label for="checkbox" class="checkbox-label">
@@ -12,20 +12,53 @@
     </header>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-export default {
-    name: 'Header',
-    components: {
-        FontAwesomeIcon
-    },
-    methods: {
-        toggleDarkMode() {
-            this.$emit('toggleDarkMode');
+
+const fullText = 'Typing Race Multiplayer'
+const displayedText = ref('')
+let isDeleting = false
+let index = 0
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+async function typeLoop() {
+    while (true) {
+        if (!isDeleting) {
+            if (index < fullText.length) {
+                displayedText.value += fullText[index]
+                index++
+                await sleep(100)
+            } else {
+                await sleep(3000)
+                isDeleting = true
+            }
+        } else {
+            if (index > 0) {
+                displayedText.value = fullText.slice(0, index - 1)
+                index--
+                await sleep(50)
+            } else {
+                await sleep(1000)
+                isDeleting = false
+            }
         }
-    },
-};
+    }
+}
+
+onMounted(() => {
+    typeLoop()
+})
+
+const emit = defineEmits(['toggleDarkMode'])
+function toggleDarkMode() {
+    emit('toggleDarkMode')
+}
 </script>
+
 
 <style>
 header {
@@ -33,11 +66,13 @@ header {
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    height: 4rem;
     padding: 10px 20px;
     background: var(--bg-color);
     color: var(--text-color);
     box-shadow: 0 0px 8px var(--shadow-color);
 }
+
 .checkbox {
     opacity: 0;
     position: absolute;
@@ -78,5 +113,25 @@ header {
 
 .checkbox:checked+.checkbox-label .ball {
     transform: translateX(42px);
+}
+
+h1 {
+    font-size: 28px;
+    white-space: nowrap;
+    overflow: hidden;
+    border-right: 2px solid #ccc;
+    animation: blinkCursor 0.7s step-end infinite;
+}
+
+@keyframes blinkCursor {
+
+    from,
+    to {
+        border-color: transparent
+    }
+
+    50% {
+        border-color: #ccc
+    }
 }
 </style>
