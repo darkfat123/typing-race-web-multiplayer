@@ -1,78 +1,66 @@
 <template>
-  <div>
-    <h2>Typing Test Room: {{ roomID }}</h2>
-    <input v-model="username" placeholder="Enter username" />
-    <input v-model="roomID" placeholder="Enter room ID" />
-    <button @click="joinRoom">Join Room</button>
-
-    <div v-if="connected">
-      <h3>พิมพ์ข้อความนี้:</h3>
-      <p>{{ givenText }}</p>
-      <textarea v-model="inputText" @input="sendText"></textarea>
-      <h3>Live WPM:</h3>
-      <ul>
-        <li v-for="(wpm, user) in wpmData" :key="user">{{ user }}: {{ wpm }} WPM</li>
-      </ul>
-    </div>
+  <div :class="{ 'dark-mode': isDarkMode }" class="main-container">
+    <Header @toggleDarkMode="toggleDarkMode" />
+    <router-view />
+    <Footer />
   </div>
 </template>
 
 <script>
+import Header from './components/Header.vue';
+import Footer from './components/Footer.vue';
+
 export default {
+  components: {
+    Header,
+    Footer,
+  },
   data() {
     return {
-      username: "",
-      roomID: "",
-      inputText: "",
-      givenText: "",
-      ws: null,
-      wpmData: {},
-      connected: false,
-      finishSound: (() => {
-        const sound = new Audio("/complete.wav");
-        sound.volume = 0.45;
-        return sound;
-      })(),
+      isDarkMode: localStorage.getItem('darkMode') === 'true'
     };
   },
   methods: {
-    joinRoom() {
-      if (!this.username || !this.roomID) {
-        alert("Enter username and room ID!");
-        return;
-      }
-      this.ws = new WebSocket(import.meta.env.VITE_WS_URL + "/ws");
-
-      this.ws.onopen = () => {
-        this.connected = true;
-        this.ws.send(JSON.stringify({ username: this.username, roomID: this.roomID }));
-      };
-      this.ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.text) {
-          this.givenText = data.text;
-        } else {
-          this.wpmData[data.username] = data.wpm;
-        }
-
-        if (data.status == "finished") {
-          this.finishSound.play();
-        }
-      };
-    },
-    sendText() {
-      if (this.ws && this.connected) {
-        this.ws.send(JSON.stringify({ text: this.inputText }));
-      }
-    },
-  },
+    toggleDarkMode() {
+      this.isDarkMode = !this.isDarkMode;
+      localStorage.setItem('darkMode', this.isDarkMode);
+    }
+  }
 };
 </script>
 
 <style>
-textarea {
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@100;200;300;400;500;600;700&display=swap');
+
+:root {
+  --bg-color: white;
+  --text-color: black;
+  --shadow-color: rgba(0, 0, 0, 0.2);
+  --main-btn-color: goldenrod;
+}
+
+.dark-mode {
+  --bg-color: #1a1a1a;
+  --text-color: #e0e0e0;
+  --shadow-color: rgba(255, 255, 255, 0.2);
+  --main-btn-color: rgb(172, 123, 0);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "IBM Plex Sans Thai Looped", sans-serif;
+  transition: background 0.2s, color 0.2s;
+}
+
+.main-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
-  height: 100px;
-  margin-bottom: 10px;
+  min-height: 100vh;
+  background: var(--bg-color);
+  color: var(--text-color);
 }
 </style>
