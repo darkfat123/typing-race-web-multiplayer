@@ -57,12 +57,10 @@ func HandleLobbyWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	// เพิ่ม client เข้า map
 	lobbyMutex.Lock()
 	lobbyClients[conn] = true
 	lobbyMutex.Unlock()
 
-	// ส่งห้องล่าสุดให้ client นี้
 	roomList := logic.RoomIdList
 	conn.WriteJSON(map[string]interface{}{
 		"type":     "room_list",

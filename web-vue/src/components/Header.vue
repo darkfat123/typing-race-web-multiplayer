@@ -79,7 +79,7 @@ header {
 }
 
 .checkbox-label {
-    background-color: rgb(56, 56, 56);
+    background-color: var(--bg-color);
     width: 80px;
     height: 36px;
     border-radius: 50px;
@@ -101,7 +101,7 @@ header {
 }
 
 .checkbox-label .ball {
-    background-color: #fff;
+    background-color: var(--ball-color);
     width: 28px;
     height: 28px;
     position: absolute;

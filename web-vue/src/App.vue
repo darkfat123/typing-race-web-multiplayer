@@ -37,6 +37,7 @@ export default {
   --text-color: black;
   --shadow-color: rgba(0, 0, 0, 0.2);
   --main-btn-color: rgb(255, 183, 0);
+  --ball-color: rgb(58, 58, 58);
 }
 
 .dark-mode {
@@ -44,6 +45,7 @@ export default {
   --text-color: #e0e0e0;
   --shadow-color: rgba(255, 255, 255, 0.2);
   --main-btn-color: rgb(172, 123, 0);
+  --ball-color: rgb(255, 255, 255);
 }
 
 * {

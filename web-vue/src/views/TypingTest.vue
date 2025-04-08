@@ -79,7 +79,7 @@ export default {
         goBack() {
             if (this.ws && this.connected) {
                 const message = { type: "close", username: this.username, roomID: this.roomID, language: this.language };
-                this.ws.send(JSON.stringify(message)); // Notify backend before closing
+                this.ws.send(JSON.stringify(message));
                 this.ws.close();
             }
             sessionStorage.removeItem("username")
