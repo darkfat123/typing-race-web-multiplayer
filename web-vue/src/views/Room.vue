@@ -132,6 +132,7 @@ export default {
 }
 
 .create-room-btn {
+  color: var(--text-color);
   position: absolute;
   right: 20px;
   width: auto;
@@ -139,7 +140,6 @@ export default {
 
 .room-footer {
   margin-top: auto;
-  /* ให้ปุ่มอยู่ติดขอบล่าง */
 }
 
 .room-list {
