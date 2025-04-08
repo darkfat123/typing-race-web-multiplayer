@@ -14,7 +14,7 @@ RUN go mod tidy
 COPY server/ ./
 
 # Build the Go app
-RUN go build -o golang-ws .
+RUN go build -o golang-ws ./cmd
 
 # Create a minimal image to run the Go app
 FROM scratch
