@@ -230,7 +230,7 @@ export default {
   width: 100%;
   padding: 10px;
   margin-top: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
   border-radius: 5px;
   border: 1px solid #ccc;
 }

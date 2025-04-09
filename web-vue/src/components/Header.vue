@@ -16,10 +16,12 @@
 import { ref, onMounted } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
-const fullText = 'Typing Race Multiplayer'
+const fullTextEn = 'Typing Race Multiplayer'
+const fullTextTh = 'แข่งขันพิมพ์ดีดแบบหลายคน'
 const displayedText = ref('')
 let isDeleting = false
 let index = 0
+let currentText = fullTextEn
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
@@ -28,8 +30,8 @@ function sleep(ms) {
 async function typeLoop() {
     while (true) {
         if (!isDeleting) {
-            if (index < fullText.length) {
-                displayedText.value += fullText[index]
+            if (index < currentText.length) {
+                displayedText.value += currentText[index]
                 index++
                 await sleep(100)
             } else {
@@ -38,12 +40,13 @@ async function typeLoop() {
             }
         } else {
             if (index > 0) {
-                displayedText.value = fullText.slice(0, index - 1)
+                displayedText.value = currentText.slice(0, index - 1)
                 index--
                 await sleep(50)
             } else {
                 await sleep(1000)
                 isDeleting = false
+                currentText = currentText === fullTextEn ? fullTextTh : fullTextEn
             }
         }
     }
@@ -58,6 +61,7 @@ function toggleDarkMode() {
     emit('toggleDarkMode')
 }
 </script>
+
 
 
 <style>

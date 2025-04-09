@@ -79,12 +79,16 @@ func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		if status, ok := message["status"]; ok && status == "ready" {
+		if status, ok := message["status"]; ok && (status == "ready" || status == "not_ready") {
 			room.Mutex.Lock()
-			player.Ready = true
+			if status == "ready" {
+				player.Ready = true
+			} else {
+				player.Ready = false
+			}
 			room.Mutex.Unlock()
 
-			log.Printf("Player %s in room %s is ready", player.Username, room.ID)
+			log.Printf("Player %s in room %s is %s", player.Username, room.ID, status)
 			logic.UpdateReadyStatus(room)
 
 			if logic.IsAllPlayersReady(room) {

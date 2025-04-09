@@ -17,9 +17,7 @@ func broadcastRoomListToLobby() {
 	lobbyMutex.Lock()
 	defer lobbyMutex.Unlock()
 
-	// กรองห้องที่มีผู้ใช้อยู่
 	validRoomList := make(map[string][]string)
-	log.Println("Test: ", logic.RoomIdList)
 	for roomID, users := range logic.RoomIdList {
 		if len(users) > 0 {
 			validRoomList[roomID] = users

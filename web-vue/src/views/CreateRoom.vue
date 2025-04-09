@@ -150,7 +150,7 @@ export default {
 }
 
 .btn:hover {
-  background: linear-gradient(to right, var(--text-color), goldenrod);
+  background: linear-gradient(to right, var(--bg-color), goldenrod);
   transform: scale(1.01);
 }
 

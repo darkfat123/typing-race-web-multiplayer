@@ -2,16 +2,17 @@
     <div v-if="connected" class="typing-container">
         <h3>Players in this room:</h3>
         <ul class="player-list">
-            <li v-for="player in playersInRoom" :key="player">
-                {{ player }} <span v-if="(readyPlayers || []).includes(player)">✅ Ready</span>
+            <li v-for="player in playersInRoom" :key="player"
+                :class="{ 'ready': (readyPlayers || []).includes(player) }">
+                {{ player }} <span v-if="(readyPlayers || []).includes(player)"></span>
             </li>
         </ul>
         <div class="button-container">
             <button @click="goBack" class="btn-back">Back</button>
             <button v-if="!isReady" @click="sendReadyFlag" class="btn">Ready</button>
+            <button v-else @click="sendReadyFlag" class="btn" :class="{ 'unready': isReady }">Unready</button>
         </div>
     </div>
-
     <div v-if="connected && isGameStarted" class="typing-container">
         <h3>Type this message:</h3>
         <p class="typing-text">
@@ -161,8 +162,8 @@ export default {
         },
         sendReadyFlag() {
             if (this.ws && this.connected) {
-                this.isReady = true;
-                this.ws.send(JSON.stringify({ status: "ready" }));
+                this.isReady = !this.isReady;
+                this.ws.send(JSON.stringify({ status: this.isReady == true ? "ready" : "not_ready" }));
             }
         },
         startCountdown() {
@@ -201,6 +202,11 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.ready {
+    background-color: #4CAF50;
+    color: var(--bg-color);
 }
 
 .countdown {
@@ -246,6 +252,11 @@ export default {
     cursor: pointer;
 }
 
+.btn-back:hover {
+    transform: scale(1.02);
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
 .btn {
     width: 100%;
     padding: 10px;
@@ -258,6 +269,8 @@ export default {
 
 .btn:hover {
     background: #218838;
+    transform: scale(1.02);
+    transition: background 0.3s ease, transform 0.2s ease;
 }
 
 .typing-container {
@@ -308,7 +321,6 @@ export default {
 }
 
 .player-list li {
-    background: transparent;
     margin: 5px;
     padding: 5px;
     box-shadow: 0 0px 8px var(--shadow-color);
@@ -326,6 +338,15 @@ export default {
     color: black;
 }
 
+.unready {
+    background-color: #8b8b8b;
+    color: white;
+}
+
+.unready:hover {
+    background-color: #2b2b2b;
+    color: white;
+}
 
 @media (max-width: 600px) {
     .typing-container {
