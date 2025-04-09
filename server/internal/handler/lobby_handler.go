@@ -24,7 +24,6 @@ func broadcastRoomListToLobby() {
 		}
 	}
 
-	log.Println("======= Room User Mapping =======")
 	if len(validRoomList) == 0 {
 		log.Println("No rooms found.")
 	} else {
@@ -32,7 +31,6 @@ func broadcastRoomListToLobby() {
 			log.Printf("🏠 Room %s → [%s]", roomID, strings.Join(users, ", "))
 		}
 	}
-	log.Println("=================================")
 
 	message := map[string]interface{}{
 		"type":     "room_list",

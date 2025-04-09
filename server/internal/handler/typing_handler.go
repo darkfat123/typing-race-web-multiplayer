@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"server/internal/logic"
 	"server/internal/model"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,6 +31,20 @@ func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 	language = data["language"]
 
 	room := logic.GetOrCreateRoom(roomIDInput, language)
+
+	if room.Limit > 0 && len(room.Players) >= room.Limit {
+		log.Printf("Room is %s full. Rejecting %s.", room.ID, username)
+		conn.WriteJSON(map[string]string{"error": "Room is full"})
+		conn.Close()
+		return
+	}
+
+	if limitStr, ok := data["limit"]; ok && room.Limit == 0 {
+		if limit, err := strconv.Atoi(limitStr); err == nil {
+			room.Limit = limit
+		}
+	}
+
 	player := &model.Player{Conn: conn, Username: username, StartTime: time.Time{}, Finished: false, Ready: false}
 	JoinRoom(room.ID, player.Username)
 
@@ -37,12 +52,11 @@ func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 	room.Players[conn] = player
 	room.Mutex.Unlock()
 
-	// Send text to player
 	if err := conn.WriteJSON(map[string]string{"text": room.Text}); err != nil {
 		log.Println("Error sending text:", err)
 	}
 
-	log.Printf("Player %s has joined room %s", player.Username, room.ID)
+	log.Printf("Player %s has joined room %s (Max players: %d, Now: %d)", player.Username, room.ID, room.Limit, len(room.Players))
 
 	logic.UpdateUserList(room)
 	logic.UpdateReadyStatus(room)
@@ -96,7 +110,6 @@ func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Cleanup when player leaves
 	RemoveUserFromRoom(room.ID, player.Username)
 	logic.CleanupPlayer(room, conn, room.ID)
 }

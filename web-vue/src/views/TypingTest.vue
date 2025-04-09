@@ -98,12 +98,26 @@ export default {
                 this.connected = true;
                 this.isReady = false;
                 this.isGameStarted = false;
-                this.ws.send(JSON.stringify({ username: this.username, roomID: this.roomID, language: this.language, limit: localStorage.getItem("max_players") }));
+                this.ws.send(JSON.stringify({
+                    username: this.username,
+                    roomID: this.roomID,
+                    language: this.language,
+                    ...(localStorage.getItem("max_players") && { limit: localStorage.getItem("max_players") })
+                }));
+                localStorage.removeItem("max_players");
+
             };
 
             this.ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-
+                if (data.error) {
+                    alert(data.error);
+                    sessionStorage.removeItem("username")
+                    sessionStorage.removeItem("roomID")
+                    this.ws.close();
+                    this.$router.push("/");
+                    return;
+                }
                 if (data.type === "update_users") {
                     this.playersInRoom = data.users;
                 }
