@@ -17,16 +17,23 @@ func broadcastRoomListToLobby() {
 	lobbyMutex.Lock()
 	defer lobbyMutex.Unlock()
 
+	// กรองห้องที่มีผู้ใช้อยู่
 	validRoomList := make(map[string][]string)
+	log.Println("Test: ", logic.RoomIdList)
 	for roomID, users := range logic.RoomIdList {
 		if len(users) > 0 {
 			validRoomList[roomID] = users
+		} else {
+			// ลบห้องที่ไม่มีผู้ใช้ทันที
+			delete(logic.RoomIdList, roomID)
 		}
 	}
 
+	// ตรวจสอบว่า validRoomList ว่างหรือไม่
 	if len(validRoomList) == 0 {
 		log.Println("No rooms found.")
 	} else {
+		// แสดงข้อมูลห้องที่มีผู้ใช้
 		for roomID, users := range validRoomList {
 			log.Printf("🏠 Room %s → [%s]", roomID, strings.Join(users, ", "))
 		}
@@ -37,7 +44,7 @@ func broadcastRoomListToLobby() {
 		"roomList": validRoomList,
 	}
 
-	// broadcast ไปยังทุกคนใน lobby
+	// broadcast ข้อมูลไปยังทุกคนใน lobby
 	for conn := range lobbyClients {
 		if err := conn.WriteJSON(message); err != nil {
 			log.Println("Error broadcasting to client:", err)

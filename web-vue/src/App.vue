@@ -38,6 +38,7 @@ export default {
   --shadow-color: rgba(0, 0, 0, 0.2);
   --main-btn-color: rgb(255, 183, 0);
   --ball-color: rgb(58, 58, 58);
+  --input-bg-color: rgb(255, 255, 255);
 }
 
 .dark-mode {
@@ -46,6 +47,7 @@ export default {
   --shadow-color: rgba(255, 255, 255, 0.2);
   --main-btn-color: rgb(172, 123, 0);
   --ball-color: rgb(255, 255, 255);
+  --input-bg-color: rgb(68, 68, 68);
 }
 
 * {
@@ -65,4 +67,10 @@ export default {
   background: var(--bg-color);
   color: var(--text-color);
 }
+
+input[type="text"] {
+  background-color: var(--input-bg-color);
+  color: var(--text-color);
+}
+
 </style>

@@ -4,7 +4,7 @@
       <h3 class="available-rooms">Available Rooms</h3>
       <MenuButton label="Create New Room" to="/create-room" class="create-room-btn" />
     </div>
-
+    <input type="text" v-model="searchRoomID" placeholder="Search Room ID" class="input" />
     <div v-if="Object.keys(filteredRoomList).length === 0">
       <p>No active rooms.</p>
     </div>
@@ -48,6 +48,7 @@ export default {
       username: "",
       roomID: "",
       selectedRoomID: "",
+      searchRoomID: "",
       showUsernameModal: false,
       language: "th",
       roomList: {},
@@ -61,7 +62,10 @@ export default {
     filteredRoomList() {
       const filtered = {};
       for (const [roomID, users] of Object.entries(this.roomList)) {
-        if (users && users.length > 0) {
+        if (
+          (this.searchRoomID && roomID.includes(this.searchRoomID)) ||
+          !this.searchRoomID
+        ) {
           filtered[roomID] = users;
         }
       }
@@ -87,13 +91,26 @@ export default {
       sessionStorage.setItem("language", this.language);
       this.$router.push("/typing-test");
     },
+    updateRoomList(newData) {
+      for (const key in this.roomList) {
+        if (!(key in newData)) {
+          delete this.roomList[key];
+        }
+      }
+
+      for (const [key, value] of Object.entries(newData)) {
+        if (Array.isArray(value) && value.length > 0) {
+          this.roomList[key] = value;
+        }
+      }
+    },
     connectWebSocket() {
       this.socket = new WebSocket(import.meta.env.VITE_WS_URL + "/ws/lobby");
 
       this.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === "room_list") {
-          this.roomList = data.roomList;
+          this.updateRoomList(data.roomList);
         }
       };
 

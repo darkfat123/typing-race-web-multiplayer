@@ -4,7 +4,7 @@
       <MenuButton label="Back" to="/" class="back-btn" @click="handleBack" />
       <h3 class="new-rooms">Create New Room</h3>
     </div>
-    <input v-model="username" placeholder="Enter username" class="input" />
+    <input type="text" v-model="username" placeholder="Enter username" class="input" />
 
     <h4>Number of players</h4>
     <div class="number-control">
