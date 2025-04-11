@@ -116,6 +116,8 @@ func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 			logic.UpdateReadyStatus(room)
 
 			if logic.IsAllPlayersReady(room) {
+				room.Locked = true
+				BroadcastRoomListToLobby()
 				log.Printf("All players in room %s are ready. Starting the game!", room.ID)
 				logic.Broadcast(room, map[string]string{"type": "start_game"})
 			}

@@ -9,14 +9,14 @@ import (
 )
 
 var (
-	rooms      = make(map[string]*model.Room)
+	Rooms      = make(map[string]*model.Room)
 	RoomIdList = make(map[string][]string)
 )
 
 // GetOrCreateRoom retrieves an existing room or creates a new one if it doesn't exist.
 func GetOrCreateRoom(roomIDInput string, language string) *model.Room {
 	// ถ้า roomIDInput มีอยู่แล้ว ก็ return ห้องเดิม
-	if room, exists := rooms[roomIDInput]; exists {
+	if room, exists := Rooms[roomIDInput]; exists {
 		return room
 	}
 
@@ -30,7 +30,7 @@ func GetOrCreateRoom(roomIDInput string, language string) *model.Room {
 		Text:         selectedText,
 		RestartVotes: make(map[string]bool),
 	}
-	rooms[randomID] = room // เก็บใน map โดยใช้ random ID
+	Rooms[randomID] = room // เก็บใน map โดยใช้ random ID
 
 	return room
 }
@@ -111,8 +111,6 @@ func IsAllPlayersReady(room *model.Room) bool {
 		}
 	}
 
-	// All players are ready
-	room.Locked = true
 	now := time.Now()
 
 	// Set StartTime for each player
@@ -132,7 +130,7 @@ func CleanupPlayer(room *model.Room, conn *websocket.Conn, roomID string) {
 	// Remove empty rooms
 	if len(room.Players) == 0 {
 		log.Printf("Room %s is empty. Deleting room", roomID)
-		delete(rooms, roomID)
+		delete(Rooms, roomID)
 	}
 
 	UpdateUserList(room)

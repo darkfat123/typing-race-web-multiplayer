@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"server/internal/logic"
+	"server/internal/model"
 	"strings"
 	"sync"
 
@@ -13,25 +14,15 @@ import (
 var lobbyClients = make(map[*websocket.Conn]bool)
 var lobbyMutex = sync.Mutex{}
 
-func broadcastRoomListToLobby() {
+func BroadcastRoomListToLobby() {
 	lobbyMutex.Lock()
 	defer lobbyMutex.Unlock()
 
-	validRoomList := make(map[string][]string)
-	for roomID, users := range logic.RoomIdList {
-		if len(users) > 0 {
-			validRoomList[roomID] = users
-		} else {
-			// ลบห้องที่ไม่มีผู้ใช้ทันที
-			delete(logic.RoomIdList, roomID)
-		}
-	}
+	validRoomList := FilterUnlockedRooms()
 
-	// ตรวจสอบว่า validRoomList ว่างหรือไม่
 	if len(validRoomList) == 0 {
 		log.Println("No rooms found.")
 	} else {
-		// แสดงข้อมูลห้องที่มีผู้ใช้
 		for roomID, users := range validRoomList {
 			log.Printf("🏠 Room %s → [%s]", roomID, strings.Join(users, ", "))
 		}
@@ -42,7 +33,6 @@ func broadcastRoomListToLobby() {
 		"roomList": validRoomList,
 	}
 
-	// broadcast ข้อมูลไปยังทุกคนใน lobby
 	for conn := range lobbyClients {
 		if err := conn.WriteJSON(message); err != nil {
 			log.Println("Error broadcasting to client:", err)
@@ -64,10 +54,10 @@ func HandleLobbyWebSocket(w http.ResponseWriter, r *http.Request) {
 	lobbyClients[conn] = true
 	lobbyMutex.Unlock()
 
-	roomList := logic.RoomIdList
+	filteredRoomList := FilterUnlockedRooms()
 	conn.WriteJSON(map[string]interface{}{
 		"type":     "room_list",
-		"roomList": roomList,
+		"roomList": filteredRoomList,
 	})
 
 	// รออ่าน (บล็อคไว้ เพื่อไม่ให้ฟังก์ชันจบเร็ว)
@@ -84,9 +74,32 @@ func HandleLobbyWebSocket(w http.ResponseWriter, r *http.Request) {
 	lobbyMutex.Unlock()
 }
 
+func FilterUnlockedRooms() map[string][]string {
+	result := make(map[string][]string)
+
+	for roomID, room := range logic.Rooms {
+		if !room.Locked {
+			if users, exists := logic.RoomIdList[roomID]; exists && len(users) > 0 {
+				result[roomID] = users
+			}
+		}
+	}
+
+	return result
+}
+
 func JoinRoom(roomID string, username string) {
 	logic.RoomIdList[roomID] = append(logic.RoomIdList[roomID], username)
-	broadcastRoomListToLobby()
+	BroadcastRoomListToLobby()
+}
+
+func IsRoomLocked(roomList map[string]*model.Room) {
+	for id, room := range roomList {
+		if room.Locked {
+			delete(logic.RoomIdList, id)
+		}
+	}
+	BroadcastRoomListToLobby()
 }
 
 func RemoveUserFromRoom(roomID string, username string) {
@@ -110,5 +123,5 @@ func RemoveUserFromRoom(roomID string, username string) {
 	}
 
 	// อัปเดตข้อมูลไปยังผู้ใช้ทั้งหมดใน lobby
-	broadcastRoomListToLobby()
+	BroadcastRoomListToLobby()
 }
