@@ -98,10 +98,10 @@ func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if text, ok := message["text"]; ok {
+			player.WordCount = len(strings.Fields(text))
+			wpm := logic.CalculateWPM(player)
 			if strings.TrimSpace(text) == room.Text && !player.Finished {
-				player.WordCount = len(strings.Fields(text))
 				player.Finished = true
-				wpm := logic.CalculateWPM(player)
 
 				log.Printf("Player %s in room %s has finished typing with WPM: %.2f", player.Username, room.ID, wpm)
 
@@ -110,8 +110,15 @@ func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 					"username": player.Username,
 					"wpm":      wpm,
 				})
+			} else {
+				logic.Broadcast(room, map[string]interface{}{
+					"type":     "calculate_wpm",
+					"username": player.Username,
+					"wpm":      wpm,
+				})
 			}
 		}
+
 	}
 
 	RemoveUserFromRoom(room.ID, player.Username)

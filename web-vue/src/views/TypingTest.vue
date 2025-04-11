@@ -1,203 +1,207 @@
 <template>
     <div v-if="connected" class="typing-container">
-      <h3>Players in this room:</h3>
-      <ul class="player-list">
-        <li v-for="player in playersInRoom" :key="player"
-            :class="{ 'ready': (readyPlayers || []).includes(player) }">
-          {{ player }}
-        </li>
-      </ul>
-      <div class="button-container">
-        <button @click="goBack" class="btn-back">Back</button>
-        <button v-if="!isReady" @click="sendReadyFlag" class="btn">Ready</button>
-        <button v-else @click="sendReadyFlag" class="btn unready">Unready</button>
-      </div>
+        <h3>Players in this room:</h3>
+        <ul class="player-list">
+            <li v-for="player in playersInRoom" :key="player"
+                :class="{ 'ready': (readyPlayers || []).includes(player) }">
+                {{ player }}
+            </li>
+        </ul>
+        <div class="button-container">
+            <button @click="goBack" class="btn-back">Back</button>
+
+            <template v-if="!isGameStarted">
+                <button v-if="!isReady" @click="sendReadyFlag" class="btn">Ready</button>
+                <button v-else @click="sendReadyFlag" class="btn unready">Unready</button>
+            </template>
+        </div>
     </div>
-  
-    <div v-if="connected && isGameStarted" class="typing-container" @keydown="handleKeydown" tabindex="0" ref="typingBox">
-      <h3>Type this message:</h3>
-      <p class="typing-text">
-        <span v-for="(char, index) in givenText" :key="index" :class="getCharClass(index)">
-          {{ char }}
-        </span>
-      </p>
-      <h3>Live WPM:</h3>
-      <ul class="wpm-list">
-        <li v-for="(wpm, user) in wpmData" :key="user">{{ user }}: {{ wpm }} WPM</li>
-      </ul>
+
+    <div v-if="connected && isGameStarted" class="typing-container" @keydown="handleKeydown" tabindex="0"
+        ref="typingBox">
+        <h3>Type this message:</h3>
+        <p class="typing-text">
+            <span v-for="(char, index) in givenText" :key="index" :class="getCharClass(index)">
+                {{ char }}
+            </span>
+        </p>
+        <h3>Live WPM:</h3>
+        <ul class="wpm-list">
+            <li v-for="(wpm, user) in wpmData" :key="user">{{ user }}: {{ wpm }} WPM</li>
+        </ul>
     </div>
-  
+
     <div v-if="isCountingDown" class="overlay">
-      <div class="countdown">{{ countdownValue }}</div>
+        <div class="countdown">{{ countdownValue }}</div>
     </div>
-  </template>
-  
-  <script>
-  export default {
+</template>
+
+<script>
+export default {
     data() {
-      return {
-        username: "",
-        roomID: "",
-        language: "",
-        inputText: "",
-        givenText: "",
-        playersInRoom: [],
-        readyPlayers: [],
-        ws: null,
-        wpmData: {},
-        connected: false,
-        isReady: false,
-        isGameStarted: false,
-        countdown: null,
-        countdownValue: 3,
-        isCountingDown: false,
-        finishSound: new Audio("/complete.wav"),
-        startSound: new Audio("/countdown.mp3"),
-      };
+        return {
+            username: "",
+            roomID: "",
+            language: "",
+            inputText: "",
+            givenText: "",
+            playersInRoom: [],
+            readyPlayers: [],
+            ws: null,
+            wpmData: {},
+            connected: false,
+            isReady: false,
+            isGameStarted: false,
+            countdown: null,
+            countdownValue: 3,
+            isCountingDown: false,
+            finishSound: new Audio("/complete.wav"),
+            startSound: new Audio("/countdown.mp3"),
+        };
     },
     mounted() {
-      this.finishSound.volume = 0.45;
-      this.startSound.volume = 0.15;
-      this.$refs.typingBox?.focus();
+        this.finishSound.volume = 0.45;
+        this.startSound.volume = 0.15;
+        this.$refs.typingBox?.focus();
     },
     created() {
-      this.username = sessionStorage.getItem("username") || "";
-      this.roomID = sessionStorage.getItem("roomID") || "";
-      this.language = sessionStorage.getItem("language") || "";
-  
-      if (!this.username) {
-        alert("Invalid username or room ID!");
-        this.$router.push("/");
-        return;
-      }
-  
-      this.connectWebSocket();
-    },
-    methods: {
-      goBack() {
-        if (this.ws && this.connected) {
-          const message = { type: "close", username: this.username, roomID: this.roomID, language: this.language };
-          this.ws.send(JSON.stringify(message));
-          this.ws.close();
-        }
-        sessionStorage.removeItem("username");
-        sessionStorage.removeItem("language");
-        sessionStorage.removeItem("roomID");
-        this.$router.push('/');
-      },
-      connectWebSocket() {
-        if (this.ws) this.ws.close();
-  
-        this.ws = new WebSocket(import.meta.env.VITE_WS_URL + "/ws/typing");
-  
-        this.ws.onopen = () => {
-          this.connected = true;
-          this.isReady = false;
-          this.isGameStarted = false;
-  
-          this.ws.send(JSON.stringify({
-            username: this.username,
-            roomID: this.roomID,
-            language: this.language,
-            ...(localStorage.getItem("max_players") && { limit: localStorage.getItem("max_players") })
-          }));
-  
-          localStorage.removeItem("max_players");
-        };
-  
-        this.ws.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          if (data.error) {
-            alert(data.error);
-            sessionStorage.removeItem("username");
-            sessionStorage.removeItem("roomID");
-            this.ws.close();
+        this.username = sessionStorage.getItem("username") || "";
+        this.roomID = sessionStorage.getItem("roomID") || "";
+        this.language = sessionStorage.getItem("language") || "";
+
+        if (!this.username) {
+            alert("Invalid username or room ID!");
             this.$router.push("/");
             return;
-          }
-          if (data.type === "update_users") {
-            this.playersInRoom = data.users;
-          }
-          if (data.type === "update_ready") {
-            this.readyPlayers = Array.isArray(data.users) ? data.users : [];
-          }
-          if (data.type === "start_game") {
-            this.isGameStarted = true;
-            this.startCountdown();
-          }
-          if (data.text) {
-            this.givenText = data.text;
-          }
-          if (data.wpm !== undefined) {
-            this.wpmData[data.username] = data.wpm.toFixed(2);
-          }
-          if (data.type === "finished") {
-            this.finishSound.play();
-          }
-        };
-  
-        this.ws.onerror = (err) => {
-          console.error("WebSocket error:", err);
-        };
-  
-        this.ws.onclose = (event) => {
-          if (event.code !== 1000) {
-            console.log("WebSocket closed unexpectedly");
-          }
-          this.connected = false;
-        };
-      },
-      sendText() {
-        if (this.ws && this.connected) {
-          this.ws.send(JSON.stringify({ text: this.inputText }));
         }
-      },
-      handleKeydown(event) {
-        if (event.key === 'Backspace') {
-          this.inputText = this.inputText.slice(0, -1);
-          this.sendText();
-          return;
-        }
-        if (!event.key || event.key.length !== 1) return;
-  
-        this.inputText += event.key;
-        this.sendText();
-      },
-      getCharClass(index) {
-        if (!this.inputText[index]) return "default";
-        return this.inputText[index] === this.givenText[index] ? "correct" : "incorrect";
-      },
-      sendReadyFlag() {
-        if (this.ws && this.connected) {
-          this.isReady = !this.isReady;
-          this.ws.send(JSON.stringify({ status: this.isReady ? "ready" : "not_ready" }));
-        }
-      },
-      startCountdown() {
-        this.isCountingDown = true;
-        this.countdownValue = 3;
-        this.startSound.play();
-        this.countdown = setInterval(() => {
-          this.countdownValue--;
-          if (this.countdownValue === 0) {
-            clearInterval(this.countdown);
-            this.isCountingDown = false;
-            this.isGameStarted = true;
-            this.$nextTick(() => {
-              this.$refs.typingBox?.focus();
-            });
-          }
-        }, 1000);
-      },
+
+        this.connectWebSocket();
+    },
+    methods: {
+        goBack() {
+            if (this.ws && this.connected) {
+                const message = { type: "close", username: this.username, roomID: this.roomID, language: this.language };
+                this.ws.send(JSON.stringify(message));
+                this.ws.close();
+            }
+            sessionStorage.removeItem("username");
+            sessionStorage.removeItem("language");
+            sessionStorage.removeItem("roomID");
+            this.$router.push('/');
+        },
+        connectWebSocket() {
+            if (this.ws) this.ws.close();
+
+            this.ws = new WebSocket(import.meta.env.VITE_WS_URL + "/ws/typing");
+
+            this.ws.onopen = () => {
+                this.connected = true;
+                this.isReady = false;
+                this.isGameStarted = false;
+
+                this.ws.send(JSON.stringify({
+                    username: this.username,
+                    roomID: this.roomID,
+                    language: this.language,
+                    ...(localStorage.getItem("max_players") && { limit: localStorage.getItem("max_players") })
+                }));
+
+                localStorage.removeItem("max_players");
+            };
+
+            this.ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.error) {
+                    alert(data.error);
+                    sessionStorage.removeItem("username");
+                    sessionStorage.removeItem("roomID");
+                    this.ws.close();
+                    this.$router.push("/");
+                    return;
+                }
+                if (data.type === "update_users") {
+                    this.playersInRoom = data.users;
+                }
+                if (data.type === "update_ready") {
+                    this.readyPlayers = Array.isArray(data.users) ? data.users : [];
+                }
+                if (data.type === "start_game") {
+                    this.isGameStarted = true;
+                    this.startCountdown();
+                }
+                if (data.text) {
+                    this.givenText = data.text;
+                }
+                if (data.wpm !== undefined) {
+                    this.wpmData[data.username] = data.wpm.toFixed(2);
+                }
+                if (data.type === "finished") {
+                    this.finishSound.play();
+                }
+            };
+
+            this.ws.onerror = (err) => {
+                console.error("WebSocket error:", err);
+            };
+
+            this.ws.onclose = (event) => {
+                if (event.code !== 1000) {
+                    console.log("WebSocket closed unexpectedly");
+                }
+                this.connected = false;
+            };
+        },
+        sendText() {
+            if (this.ws && this.connected) {
+                this.ws.send(JSON.stringify({ text: this.inputText }));
+            }
+        },
+        handleKeydown(event) {
+            if (event.key === 'Backspace') {
+                this.inputText = this.inputText.slice(0, -1);
+                this.sendText();
+                return;
+            }
+            if (!event.key || event.key.length !== 1) return;
+
+            this.inputText += event.key;
+            this.sendText();
+        },
+        getCharClass(index) {
+            if (!this.inputText[index]) return "default";
+            return this.inputText[index] === this.givenText[index] ? "correct" : "incorrect";
+        },
+        sendReadyFlag() {
+            if (this.ws && this.connected) {
+                this.isReady = !this.isReady;
+                this.ws.send(JSON.stringify({ status: this.isReady ? "ready" : "not_ready" }));
+            }
+        },
+        startCountdown() {
+            this.isCountingDown = true;
+            this.countdownValue = 3;
+            this.startSound.play();
+            this.countdown = setInterval(() => {
+                this.countdownValue--;
+                if (this.countdownValue === 0) {
+                    clearInterval(this.countdown);
+                    this.isCountingDown = false;
+                    this.isGameStarted = true;
+                    this.$nextTick(() => {
+                        this.$refs.typingBox?.focus();
+                    });
+                }
+            }, 1000);
+        },
     },
     beforeUnmount() {
-      if (this.ws) {
-        this.ws.close();
-      }
+        if (this.ws) {
+            this.ws.close();
+        }
     },
-  };
-  </script>
-  
+};
+</script>
+
 
 <style>
 .overlay {
