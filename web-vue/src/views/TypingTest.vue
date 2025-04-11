@@ -15,8 +15,12 @@
                 <button v-else @click="sendReadyFlag" class="btn unready">Unready</button>
             </template>
 
-            <button v-if="connected && isGameStarted && !hasVotedRestart" class="btn" @click="voteRestart">Vote to
-                Restart</button>
+            <button v-if="connected && isGameStarted && !hasVotedRestart" class="btn" @click="voteRestart">
+    Vote to Restart
+    <span v-if="restartVoteInfo.total > 0" class="vote-info"> {{ restartVoteInfo.votes }}/{{ restartVoteInfo.total }}
+    </span>
+</button>
+
 
         </div>
     </div>
@@ -33,10 +37,6 @@
         <ul class="wpm-list">
             <li v-for="(wpm, user) in wpmData" :key="user">{{ user }}: {{ wpm }} WPM</li>
         </ul>
-    </div>
-
-    <div v-if="restartVoteInfo.total > 0">
-        <p>Restart votes: {{ restartVoteInfo.votes }}/{{ restartVoteInfo.total }}</p>
     </div>
 
     <div v-if="isCountingDown" class="overlay">
@@ -390,6 +390,14 @@ export default {
 .unready:hover {
     background-color: #2b2b2b;
     color: white;
+}
+
+.vote-info {
+    background: var(--bg-color);
+    color: var(--text-color);
+    padding: 1px 8px 1px 8px;
+    margin-left: 10px;
+    border-radius: 5px;
 }
 
 @media (max-width: 600px) {
