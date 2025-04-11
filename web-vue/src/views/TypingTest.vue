@@ -14,6 +14,10 @@
                 <button v-if="!isReady" @click="sendReadyFlag" class="btn">Ready</button>
                 <button v-else @click="sendReadyFlag" class="btn unready">Unready</button>
             </template>
+
+            <button v-if="connected && isGameStarted && !hasVotedRestart" class="btn" @click="voteRestart">Vote to
+                Restart</button>
+
         </div>
     </div>
 
@@ -29,6 +33,10 @@
         <ul class="wpm-list">
             <li v-for="(wpm, user) in wpmData" :key="user">{{ user }}: {{ wpm }} WPM</li>
         </ul>
+    </div>
+
+    <div v-if="restartVoteInfo.total > 0">
+        <p>Restart votes: {{ restartVoteInfo.votes }}/{{ restartVoteInfo.total }}</p>
     </div>
 
     <div v-if="isCountingDown" class="overlay">
@@ -51,6 +59,8 @@ export default {
             wpmData: {},
             connected: false,
             isReady: false,
+            restartVoteInfo: { votes: 0, total: 0 },
+            hasVotedRestart: false,
             isGameStarted: false,
             countdown: null,
             countdownValue: 3,
@@ -138,6 +148,20 @@ export default {
                 if (data.type === "finished") {
                     this.finishSound.play();
                 }
+                if (data.type === "update_votes") {
+                    this.restartVoteInfo.votes = data.votes;
+                    this.restartVoteInfo.total = data.total;
+                }
+                if (data.type === "restart_game") {
+                    this.inputText = "";
+                    this.givenText = data.text;
+                    this.isGameStarted = false;
+                    this.hasVotedRestart = false;
+                    this.wpmData = {}
+                    this.restartVoteInfo = { votes: 0, total: 0 };
+                    this.startCountdown();
+                }
+
             };
 
             this.ws.onerror = (err) => {
@@ -193,6 +217,13 @@ export default {
                 }
             }, 1000);
         },
+        voteRestart() {
+            if (this.ws && this.connected && !this.hasVotedRestart) {
+                this.hasVotedRestart = true;
+                this.ws.send(JSON.stringify({ type: "vote_restart" }));
+            }
+        },
+
     },
     beforeUnmount() {
         if (this.ws) {

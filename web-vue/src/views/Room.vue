@@ -217,7 +217,8 @@ export default {
 }
 
 .modal-content {
-  background: white;
+  background: var(--bg-color);
+  color: var(--text-color);
   padding: 2rem;
   border-radius: 10px;
   width: 90%;
@@ -244,7 +245,7 @@ export default {
 .btn {
   flex: 1;
   padding: 10px;
-  background: #007bff;
+  background: #28a745;
   color: white;
   border: none;
   border-radius: 5px;

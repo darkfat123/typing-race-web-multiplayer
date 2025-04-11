@@ -2,9 +2,7 @@ package logic
 
 import (
 	"log"
-	"math/rand"
 	"server/internal/model"
-	"server/pkg/texts"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -22,26 +20,19 @@ func GetOrCreateRoom(roomIDInput string, language string) *model.Room {
 		return room
 	}
 
-	selectedText := getRandomText(language)
+	selectedText := GetRandomText(language)
 	randomID := RandomRoomId() // สุ่ม ID ก่อน
 
 	room := &model.Room{
-		ID:       randomID, // ใช้ ID ที่สุ่มมา
-		Language: language,
-		Players:  make(map[*websocket.Conn]*model.Player),
-		Text:     selectedText,
+		ID:           randomID, // ใช้ ID ที่สุ่มมา
+		Language:     language,
+		Players:      make(map[*websocket.Conn]*model.Player),
+		Text:         selectedText,
+		RestartVotes: make(map[string]bool),
 	}
 	rooms[randomID] = room // เก็บใน map โดยใช้ random ID
 
 	return room
-}
-
-// getRandomText selects a random text based on the provided language.
-func getRandomText(language string) string {
-	if language == "th" {
-		return texts.ThaiTexts[rand.Intn(len(texts.ThaiTexts))]
-	}
-	return texts.EngTexts[rand.Intn(len(texts.EngTexts))]
 }
 
 // UpdateUserList updates the user list of the room and broadcasts the new list.

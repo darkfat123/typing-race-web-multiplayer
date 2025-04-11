@@ -73,6 +73,30 @@ func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
+		if message["type"] == "vote_restart" {
+			room.RestartVotes[player.Username] = true
+
+			if float64(len(room.RestartVotes))/float64(len(room.Players)) > 0.6 {
+				room.RestartVotes = make(map[string]bool)
+				newText := logic.GetRandomText(room.Language)
+				room.Text = newText
+
+				logic.Broadcast(room, map[string]interface{}{
+					"type": "restart_game",
+					"text": newText,
+				})
+				player.StartTime = time.Now()
+				player.Finished = false
+
+			} else {
+				logic.Broadcast(room, map[string]interface{}{
+					"type":  "update_votes",
+					"votes": len(room.RestartVotes),
+					"total": len(room.Players),
+				})
+			}
+		}
+
 		if message["type"] == "close" {
 			log.Printf("%s is leaving from Room No. %s, closing connection", player.Username, room.ID)
 			conn.Close()
