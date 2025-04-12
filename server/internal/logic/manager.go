@@ -2,54 +2,37 @@ package logic
 
 import (
 	"log"
-	"math/rand"
 	"server/internal/model"
-	"server/pkg/texts"
 	"time"
 
 	"github.com/gorilla/websocket"
 )
 
 var (
-	rooms      = make(map[string]*model.Room)
+	Rooms      = make(map[string]*model.Room)
 	RoomIdList = make(map[string][]string)
 )
-
-func init() {
-	// RoomIdList = map[string][]string{
-	// 	"room1": {"user1", "user2", "user3", "user4", "user5", "user6", "user7", "user8", "user9"},
-	// 	"room2": {"user4", "user5"},
-	// 	"room3": {"user6", "user7", "user8", "user9"},
-	// }
-}
 
 // GetOrCreateRoom retrieves an existing room or creates a new one if it doesn't exist.
 func GetOrCreateRoom(roomIDInput string, language string) *model.Room {
 	// ถ้า roomIDInput มีอยู่แล้ว ก็ return ห้องเดิม
-	if room, exists := rooms[roomIDInput]; exists {
+	if room, exists := Rooms[roomIDInput]; exists {
 		return room
 	}
 
-	selectedText := getRandomText(language)
+	selectedText := GetRandomText(language)
 	randomID := RandomRoomId() // สุ่ม ID ก่อน
 
 	room := &model.Room{
-		ID:       randomID, // ใช้ ID ที่สุ่มมา
-		Language: language,
-		Players:  make(map[*websocket.Conn]*model.Player),
-		Text:     selectedText,
+		ID:           randomID, // ใช้ ID ที่สุ่มมา
+		Language:     language,
+		Players:      make(map[*websocket.Conn]*model.Player),
+		Text:         selectedText,
+		RestartVotes: make(map[string]bool),
 	}
-	rooms[randomID] = room // เก็บใน map โดยใช้ random ID
+	Rooms[randomID] = room // เก็บใน map โดยใช้ random ID
 
 	return room
-}
-
-// getRandomText selects a random text based on the provided language.
-func getRandomText(language string) string {
-	if language == "th" {
-		return texts.ThaiTexts[rand.Intn(len(texts.ThaiTexts))]
-	}
-	return texts.EngTexts[rand.Intn(len(texts.EngTexts))]
 }
 
 // UpdateUserList updates the user list of the room and broadcasts the new list.
@@ -128,8 +111,6 @@ func IsAllPlayersReady(room *model.Room) bool {
 		}
 	}
 
-	// All players are ready
-	room.Locked = true
 	now := time.Now()
 
 	// Set StartTime for each player
@@ -149,7 +130,7 @@ func CleanupPlayer(room *model.Room, conn *websocket.Conn, roomID string) {
 	// Remove empty rooms
 	if len(room.Players) == 0 {
 		log.Printf("Room %s is empty. Deleting room", roomID)
-		delete(rooms, roomID)
+		delete(Rooms, roomID)
 	}
 
 	UpdateUserList(room)

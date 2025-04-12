@@ -4,16 +4,16 @@
       <MenuButton label="Back" to="/" class="back-btn" @click="handleBack" />
       <h3 class="new-rooms">Create New Room</h3>
     </div>
-    <input v-model="username" placeholder="Enter username" class="input" />
+    <input type="text" v-model="username" placeholder="Enter username" class="input" />
 
-    <div class="language-selector">
-      <button :class="['lang-btn', { selected: language === 'th' }]" @click="selectLanguage('th')">
-        Thai
-      </button>
-      <button :class="['lang-btn', { selected: language === 'en' }]" @click="selectLanguage('en')">
-        English
-      </button>
+    <h4>Number of players</h4>
+    <div class="number-control">
+      <button class="control-btn" @click="decreaseValue">-</button>
+      <div class="number-box">{{ value }}</div>
+      <button class="control-btn" @click="increaseValue">+</button>
     </div>
+
+    <LanguageSelector :selectedLang="language" @update:lang="language = $event" />
 
     <button @click="joinRoom" class="btn">Create Room</button>
   </div>
@@ -21,10 +21,12 @@
 
 <script>
 import MenuButton from '../components/MenuButton.vue';
+import LanguageSelector from '../components/LanguageSelector.vue';
 
 export default {
   components: {
-    MenuButton
+    MenuButton,
+    LanguageSelector
   },
   data() {
     return {
@@ -32,6 +34,7 @@ export default {
       language: "th",
       roomList: {},
       socket: null,
+      value: 1,
     };
   },
   methods: {
@@ -39,6 +42,8 @@ export default {
       this.language = lang;
     },
     handleBack() {
+      sessionStorage.removeItem("username")
+      sessionStorage.removeItem("language")
       sessionStorage.removeItem("roomID")
     },
     joinRoom() {
@@ -46,10 +51,22 @@ export default {
         alert("Enter username!");
         return;
       }
+      console.log("Value of max_players before setting:", this.value);
       sessionStorage.setItem("username", this.username);
       sessionStorage.setItem("language", this.language);
+      localStorage.setItem("max_players", this.value);
       this.$router.push("/typing-test");
     },
+    increaseValue() {
+      if (this.value < 10) {
+        this.value++;
+      }
+    },
+    decreaseValue() {
+      if (this.value > 1) {
+        this.value--;
+      }
+    }
   },
 };
 </script>
@@ -74,6 +91,43 @@ export default {
   border: 1px solid #ccc;
 }
 
+.number-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px 0;
+}
+
+
+.control-btn {
+  width: 50px;
+  height: 50px;
+  font-size: 24px;
+  background-color: var(--text-color);
+  color: var(--bg-color);
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  margin: 0 10px;
+  transition: 0.2s;
+}
+
+.control-btn:hover {
+  background-color: #ccc;
+}
+
+.number-box {
+  width: 100px;
+  height: 48px;
+  font-size: 18px;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
 .btn {
   width: 100%;
   padding: 10px;
@@ -91,37 +145,7 @@ export default {
 }
 
 .btn:hover {
-  background: linear-gradient(to right, var(--text-color), goldenrod);
-  transform: scale(1.01);
-}
-
-.language-selector {
-  gap: 10px;
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  margin-bottom: 10px;
-}
-
-.lang-btn {
-  flex: 1;
-  padding: 10px 0;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  color: var(--text-color);
-  background-color: transparent;
-  cursor: pointer;
-  transition: background 0.3s ease, transform 0.2s ease;
-}
-
-.lang-btn.selected {
-  background-color: var(--main-btn-color);
-  color: var(--text-color);
-}
-
-.lang-btn:hover {
-  color: black;
-  background-color: #f1f1f1;
+  background: linear-gradient(to right, var(--bg-color), goldenrod);
   transform: scale(1.01);
 }
 
