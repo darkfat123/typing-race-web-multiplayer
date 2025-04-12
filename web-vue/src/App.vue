@@ -30,13 +30,15 @@ export default {
 </script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@100;200;300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@100;200;300;400;500;600;700&family=K2D:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
 
 :root {
   --bg-color: white;
   --text-color: black;
   --shadow-color: rgba(0, 0, 0, 0.2);
-  --main-btn-color: goldenrod;
+  --main-btn-color: rgb(255, 183, 0);
+  --ball-color: rgb(58, 58, 58);
+  --input-bg-color: rgb(255, 255, 255);
 }
 
 .dark-mode {
@@ -44,13 +46,15 @@ export default {
   --text-color: #e0e0e0;
   --shadow-color: rgba(255, 255, 255, 0.2);
   --main-btn-color: rgb(172, 123, 0);
+  --ball-color: rgb(255, 255, 255);
+  --input-bg-color: rgb(68, 68, 68);
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: "IBM Plex Sans Thai Looped", sans-serif;
+  font-family: "K2D", sans-serif;
   transition: background 0.2s, color 0.2s;
 }
 
@@ -63,4 +67,10 @@ export default {
   background: var(--bg-color);
   color: var(--text-color);
 }
+
+input[type="text"] {
+  background-color: var(--input-bg-color);
+  color: var(--text-color);
+}
+
 </style>

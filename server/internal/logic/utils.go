@@ -4,6 +4,7 @@ import (
 	"log"
 	"math/rand"
 	"server/internal/model"
+	"server/pkg/texts"
 	"strconv"
 	"time"
 )
@@ -24,4 +25,12 @@ func CalculateWPM(player *model.Player) float64 {
 func RandomRoomId() string {
 	id := strconv.Itoa(rand.Intn(10000))
 	return id
+}
+
+// getRandomText selects a random text based on the provided language.
+func GetRandomText(language string) string {
+	if language == "th" {
+		return texts.ThaiTexts[rand.Intn(len(texts.ThaiTexts))]
+	}
+	return texts.EngTexts[rand.Intn(len(texts.EngTexts))]
 }

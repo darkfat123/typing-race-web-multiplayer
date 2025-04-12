@@ -2,27 +2,52 @@
     <div v-if="connected" class="typing-container">
         <h3>Players in this room:</h3>
         <ul class="player-list">
-            <li v-for="player in playersInRoom" :key="player">
-                {{ player }} <span v-if="(readyPlayers || []).includes(player)">✅ Ready</span>
+            <li v-for="player in playersInRoom" :key="player"
+                :class="{ 'ready': (readyPlayers || []).includes(player) }">
+                {{ player }}
             </li>
         </ul>
         <div class="button-container">
             <button @click="goBack" class="btn-back">Back</button>
-            <button v-if="!isReady" @click="sendReadyFlag" class="btn">Ready</button>
+
+            <template v-if="!isGameStarted">
+                <button v-if="!isReady" @click="sendReadyFlag" class="btn">Ready</button>
+                <button v-else @click="sendReadyFlag" class="btn unready">Unready</button>
+            </template>
+
+            <button v-if="connected && isGameStarted && !hasVotedRestart" class="btn" @click="voteRestart">
+                Vote to Restart
+                <span v-if="restartVoteInfo.total > 0" class="vote-info"> {{ restartVoteInfo.votes }}/{{
+                    restartVoteInfo.total }}
+                </span>
+            </button>
+
+
         </div>
     </div>
 
-    <div v-if="connected && isGameStarted" class="typing-container">
-        <h3>Type this message:</h3>
+    <div v-if="connected && isGameStarted" class="typing-container" @keydown="handleKeydown" tabindex="0"
+        ref="typingBox">
+        <div class="row">
+            <div class="current-wpm">
+                <RoundedIcon label="current wpm:" color="#9FB3DF" />
+                <span v-if="currentUser && wpmData[currentUser]">
+                    {{ wpmData[currentUser] }} wpm
+                </span>
+            </div>
+            <div class="timer">
+                <RoundedIcon label="time:" color="#E38E49" />
+                <span>{{ formattedElapsedTime }}</span>
+            </div>
+        </div>
         <p class="typing-text">
             <span v-for="(char, index) in givenText" :key="index" :class="getCharClass(index)">
                 {{ char }}
             </span>
         </p>
-        <textarea v-model="inputText" @input="sendText" class="typing-area"></textarea>
-        <h3>Live WPM:</h3>
         <ul class="wpm-list">
-            <li v-for="(wpm, user) in wpmData" :key="user">{{ user }}: {{ wpm }} WPM</li>
+            <li v-for="(wpm, user, index) in wpmDataFinished" :key="user"> No. {{ index + 1 }} - {{ user }}: <span
+                    class="wpm">{{ wpm }}</span> WPM</li>
         </ul>
     </div>
 
@@ -32,7 +57,12 @@
 </template>
 
 <script>
+import RoundedIcon from '@/components/RoundedIcon.vue';
+
 export default {
+    components: {
+        RoundedIcon
+    },
     data() {
         return {
             username: "",
@@ -44,23 +74,45 @@ export default {
             readyPlayers: [],
             ws: null,
             wpmData: {},
+            wpmDataFinished: {},
             connected: false,
             isReady: false,
+            restartVoteInfo: { votes: 0, total: 0 },
+            hasVotedRestart: false,
             isGameStarted: false,
+            elapsedTime: 0,
+            startTime: null,
+            timerInterval: null,
             countdown: null,
             countdownValue: 3,
             isCountingDown: false,
-            finishSound: (() => {
-                const sound = new Audio("/complete.wav");
-                sound.volume = 0.45;
-                return sound;
-            })(),
-            startSound: (() => {
-                const startsound = new Audio("/countdown.mp3");
-                startsound.volume = 0.15;
-                return startsound;
-            })(),
+            timer: null,
+            finishSound: new Audio("/complete.wav"),
+            startSound: new Audio("/countdown.mp3"),
         };
+    },
+    mounted() {
+        this.finishSound.volume = 0.45;
+        this.startSound.volume = 0.15;
+        this.$refs.typingBox?.focus();
+    },
+    computed: {
+        currentUser() {
+            return sessionStorage.getItem("username");
+        },
+        filteredWpmData() {
+            const currentUser = currentUser();
+            if (!currentUser) return {};
+            return {
+                [currentUser]: this.wpmData[currentUser]
+            };
+        },
+        formattedElapsedTime() {
+            const totalSeconds = Math.floor(this.elapsedTime);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
     },
     created() {
         this.username = sessionStorage.getItem("username") || "";
@@ -79,16 +131,16 @@ export default {
         goBack() {
             if (this.ws && this.connected) {
                 const message = { type: "close", username: this.username, roomID: this.roomID, language: this.language };
-                this.ws.send(JSON.stringify(message)); // Notify backend before closing
+                this.ws.send(JSON.stringify(message));
                 this.ws.close();
             }
-            sessionStorage.removeItem("roomID")
+            sessionStorage.removeItem("username");
+            sessionStorage.removeItem("language");
+            sessionStorage.removeItem("roomID");
             this.$router.push('/');
         },
         connectWebSocket() {
-            if (this.ws) {
-                this.ws.close();
-            }
+            if (this.ws) this.ws.close();
 
             this.ws = new WebSocket(import.meta.env.VITE_WS_URL + "/ws/typing");
 
@@ -96,12 +148,27 @@ export default {
                 this.connected = true;
                 this.isReady = false;
                 this.isGameStarted = false;
-                this.ws.send(JSON.stringify({ username: this.username, roomID: this.roomID, language: this.language }));
+
+                this.ws.send(JSON.stringify({
+                    username: this.username,
+                    roomID: this.roomID,
+                    language: this.language,
+                    ...(localStorage.getItem("max_players") && { limit: localStorage.getItem("max_players") })
+                }));
+
+                localStorage.removeItem("max_players");
             };
 
             this.ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-
+                if (data.error) {
+                    alert(data.error);
+                    sessionStorage.removeItem("username");
+                    sessionStorage.removeItem("roomID");
+                    this.ws.close();
+                    this.$router.push("/");
+                    return;
+                }
                 if (data.type === "update_users") {
                     this.playersInRoom = data.users;
                 }
@@ -119,8 +186,24 @@ export default {
                     this.wpmData[data.username] = data.wpm.toFixed(2);
                 }
                 if (data.type === "finished") {
+                    this.wpmDataFinished = JSON.parse(JSON.stringify(this.wpmData));
                     this.finishSound.play();
                 }
+                if (data.type === "update_votes") {
+                    this.restartVoteInfo.votes = data.votes;
+                    this.restartVoteInfo.total = data.total;
+                }
+                if (data.type === "restart_game") {
+                    this.inputText = "";
+                    this.givenText = data.text;
+                    this.isGameStarted = false;
+                    this.hasVotedRestart = false;
+                    this.wpmData = {}
+                    this.wpmDataFinished = {}
+                    this.restartVoteInfo = { votes: 0, total: 0 };
+                    this.startCountdown();
+                }
+
             };
 
             this.ws.onerror = (err) => {
@@ -139,30 +222,58 @@ export default {
                 this.ws.send(JSON.stringify({ text: this.inputText }));
             }
         },
+        handleKeydown(event) {
+            if (event.key === 'Backspace') {
+                this.inputText = this.inputText.slice(0, -1);
+                this.sendText();
+                return;
+            }
+            if (!event.key || event.key.length !== 1) return;
+
+            this.inputText += event.key;
+            this.sendText();
+        },
         getCharClass(index) {
             if (!this.inputText[index]) return "default";
-            return this.inputText[index] == this.givenText[index] ? "correct" : "incorrect";
+            return this.inputText[index] === this.givenText[index] ? "correct" : "incorrect";
         },
         sendReadyFlag() {
             if (this.ws && this.connected) {
-                this.isReady = true;
-                this.ws.send(JSON.stringify({ status: "ready" }));
+                this.isReady = !this.isReady;
+                this.ws.send(JSON.stringify({ status: this.isReady ? "ready" : "not_ready" }));
             }
         },
         startCountdown() {
             this.isCountingDown = true;
             this.countdownValue = 3;
             this.startSound.play();
+
             this.countdown = setInterval(() => {
                 this.countdownValue--;
                 if (this.countdownValue === 0) {
                     clearInterval(this.countdown);
                     this.isCountingDown = false;
                     this.isGameStarted = true;
+
+                    this.startTime = performance.now();
+                    this.timerInterval = setInterval(() => {
+                        const now = performance.now();
+                        this.elapsedTime = ((now - this.startTime) / 1000).toFixed(2);
+                    }, 100);
+
+                    this.$nextTick(() => {
+                        this.$refs.typingBox?.focus();
+                    });
                 }
             }, 1000);
-        }
+        },
 
+        voteRestart() {
+            if (this.ws && this.connected && !this.hasVotedRestart) {
+                this.hasVotedRestart = true;
+                this.ws.send(JSON.stringify({ type: "vote_restart" }));
+            }
+        },
 
     },
     beforeUnmount() {
@@ -172,6 +283,7 @@ export default {
     },
 };
 </script>
+
 
 <style>
 .overlay {
@@ -185,6 +297,11 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.ready {
+    background-color: #4CAF50;
+    color: var(--bg-color);
 }
 
 .countdown {
@@ -230,6 +347,11 @@ export default {
     cursor: pointer;
 }
 
+.btn-back:hover {
+    transform: scale(1.02);
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
 .btn {
     width: 100%;
     padding: 10px;
@@ -242,6 +364,8 @@ export default {
 
 .btn:hover {
     background: #218838;
+    transform: scale(1.02);
+    transition: background 0.3s ease, transform 0.2s ease;
 }
 
 .typing-container {
@@ -253,6 +377,10 @@ export default {
     width: 100%;
     max-width: 1000px;
     text-align: center;
+}
+
+.typing-container h3 {
+    margin-bottom: 20px;
 }
 
 .typing-text {
@@ -292,7 +420,6 @@ export default {
 }
 
 .player-list li {
-    background: transparent;
     margin: 5px;
     padding: 5px;
     box-shadow: 0 0px 8px var(--shadow-color);
@@ -310,10 +437,50 @@ export default {
     color: black;
 }
 
+.unready {
+    background-color: #8b8b8b;
+    color: white;
+}
+
+.unready:hover {
+    background-color: #2b2b2b;
+    color: white;
+}
+
+.vote-info {
+    background: var(--bg-color);
+    color: var(--text-color);
+    padding: 1px 8px 1px 8px;
+    margin-left: 10px;
+    border-radius: 5px;
+}
 
 @media (max-width: 600px) {
     .typing-container {
         max-width: 100%;
     }
+}
+
+.row {
+    display: flex;
+    justify-content: flex-end;
+    text-align: left;
+    gap: 15px;
+}
+
+.current-wpm,
+.timer {
+    font-size: 12px;
+    display: flex;
+    letter-spacing: 1px;
+}
+
+.timer span,
+.current-wpm span {
+    min-width: 80px;
+}
+
+.wpm {
+    color: #FF8343;
 }
 </style>

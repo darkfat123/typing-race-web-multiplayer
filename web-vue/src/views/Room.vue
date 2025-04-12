@@ -4,21 +4,29 @@
       <h3 class="available-rooms">Available Rooms</h3>
       <MenuButton label="Create New Room" to="/create-room" class="create-room-btn" />
     </div>
-
+    <input type="text" v-model="searchRoomID" placeholder="Search Room ID" class="input" />
+    <LanguageSelector :needAll="true" :selectedLang="language" @update:lang="language = $event"
+      class="language-selector" />
     <div v-if="Object.keys(filteredRoomList).length === 0">
       <p>No active rooms.</p>
     </div>
 
     <ul v-else class="room-list">
-      <li v-for="(users, roomID) in filteredRoomList" :key="roomID" class="room-card">
-        <h4>🔑 Room ID: {{ roomID }}</h4>
-        <p v-if="users && users.length > 0">{{ users.join(", ") }}</p>
+      <li v-for="(room, roomID) in filteredRoomList" :key="roomID" class="room-card">
+        <h4>
+          🔑 Room ID: {{ roomID }}
+          <span v-if="room.users.length > 0" class="room-user-count">({{ room.users.length }}/{{ room.limit }}
+            users)</span>
+        </h4>
+        <p class="room-language">🌐 Language: {{ room.language.toUpperCase() }}</p>
+        <p v-if="room.users && room.users.length > 0">{{ room.users.join(", ") }}</p>
         <div class="room-footer">
           <button class="join-btn" @click="openModal(roomID)">Join This Room</button>
-
         </div>
       </li>
+
     </ul>
+
 
     <!-- Username Modal -->
     <div v-if="showUsernameModal" class="modal-overlay">
@@ -26,8 +34,8 @@
         <h3>Enter Your Username</h3>
         <input v-model="username" placeholder="Username" class="input" />
         <div class="modal-buttons">
-          <button @click="confirmJoin" class="btn">Join</button>
           <button @click="closeModal" class="btn cancel">Cancel</button>
+          <button @click="confirmJoin" class="btn">Join</button>
         </div>
       </div>
     </div>
@@ -36,18 +44,23 @@
 
 <script>
 import MenuButton from '../components/MenuButton.vue';
-
+import LanguageSelector from '../components/LanguageSelector.vue';
+sessionStorage.removeItem("username")
+sessionStorage.removeItem("language")
+sessionStorage.removeItem("roomID")
 export default {
   components: {
-    MenuButton
+    MenuButton,
+    LanguageSelector
   },
   data() {
     return {
       username: "",
       roomID: "",
       selectedRoomID: "",
+      searchRoomID: "",
       showUsernameModal: false,
-      language: "th",
+      language: "",
       roomList: {},
       socket: null,
     };
@@ -58,9 +71,12 @@ export default {
   computed: {
     filteredRoomList() {
       const filtered = {};
-      for (const [roomID, users] of Object.entries(this.roomList)) {
-        if (users && users.length > 0) {
-          filtered[roomID] = users;
+      for (const [roomID, room] of Object.entries(this.roomList)) {
+        const matchesSearch = !this.searchRoomID || roomID.includes(this.searchRoomID);
+        const matchesLang = !this.language || room.language === this.language;
+
+        if (matchesSearch && matchesLang) {
+          filtered[roomID] = room;
         }
       }
       return filtered;
@@ -85,13 +101,23 @@ export default {
       sessionStorage.setItem("language", this.language);
       this.$router.push("/typing-test");
     },
+    updateRoomList(newData) {
+      const filtered = {};
+      for (const [roomID, room] of Object.entries(newData)) {
+        if (room.users && room.users.length > 0) {
+          filtered[roomID] = room;
+        }
+      }
+      this.roomList = filtered;
+    }
+    ,
     connectWebSocket() {
       this.socket = new WebSocket(import.meta.env.VITE_WS_URL + "/ws/lobby");
 
       this.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === "room_list") {
-          this.roomList = data.roomList;
+          this.updateRoomList(data.roomList);
         }
       };
 
@@ -113,7 +139,7 @@ export default {
   text-align: center;
   width: 100%;
   max-width: 1000px;
-  margin: 1rem 1rem 2rem 1rem;
+  margin: 1rem 1rem 1rem 1rem;
   position: relative;
 }
 
@@ -132,6 +158,7 @@ export default {
 }
 
 .create-room-btn {
+  background-color: var(--main-btn-color);
   color: var(--text-color);
   position: absolute;
   right: 20px;
@@ -196,9 +223,17 @@ export default {
   z-index: 1000;
 }
 
+.room-user-count {
+  font-size: 0.9rem;
+  color: #888;
+  margin-left: 8px;
+  font-weight: bold;
+}
+
 .modal-content {
-  background: white;
-  padding: 2rem;
+  background: var(--bg-color);
+  color: var(--text-color);
+  padding: 1.5rem;
   border-radius: 10px;
   width: 90%;
   max-width: 400px;
@@ -210,12 +245,13 @@ export default {
   width: 100%;
   padding: 10px;
   margin-top: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0px;
   border-radius: 5px;
   border: 1px solid #ccc;
 }
 
 .modal-buttons {
+  margin-top: 20px;
   display: flex;
   justify-content: space-between;
   gap: 10px;
@@ -224,7 +260,7 @@ export default {
 .btn {
   flex: 1;
   padding: 10px;
-  background: #007bff;
+  background: #28a745;
   color: white;
   border: none;
   border-radius: 5px;
@@ -243,6 +279,9 @@ export default {
   background: #c82333;
 }
 
+.language-selector {
+  margin-bottom: 25px;
+}
 
 @media (max-width: 768px) {
   .room-container {
