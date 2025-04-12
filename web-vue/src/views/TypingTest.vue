@@ -41,10 +41,14 @@
             </div>
         </div>
         <p class="typing-text">
-            <span v-for="(char, index) in givenText" :key="index" :class="getCharClass(index)">
+            <span v-for="(char, index) in givenText" :key="index" :class="[
+                getCharClass(index),
+                { 'has-cursor': index + 1 === inputText.length }
+            ]">
                 {{ char }}
             </span>
         </p>
+
         <ul class="wpm-list">
             <li v-for="(wpm, user, index) in wpmDataFinished" :key="user"> No. {{ index + 1 }} - {{ user }}: <span
                     class="wpm">{{ wpm }}</span> WPM</li>
@@ -385,11 +389,16 @@ export default {
 
 .typing-text {
     font-size: 1.4em;
-
+    position: relative;
+    display: inline-block;
     background: var(--bg-color);
     padding: 10px;
     border-radius: 5px;
     margin: 10px 0;
+}
+
+.typing-text span {
+  display: inline;
 }
 
 .typing-area {
@@ -482,5 +491,26 @@ export default {
 
 .wpm {
     color: #FF8343;
+}
+
+.typing-text .has-cursor {
+    position: relative;
+}
+
+.typing-text .has-cursor::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 1px;
+    background: var(--text-color);
+    animation: blink 1s step-start infinite;
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
 }
 </style>
