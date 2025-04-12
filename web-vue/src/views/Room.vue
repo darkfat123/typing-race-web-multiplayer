@@ -16,8 +16,8 @@
           🔑 Room ID: {{ roomID }}
           <span v-if="room.users.length > 0" class="room-user-count">({{ room.users.length }}/{{ room.limit }} users)</span>
         </h4>
+        <p class="room-language">🌐 Language: {{ room.language.toUpperCase() }}</p>
         <p v-if="room.users && room.users.length > 0">{{ room.users.join(", ") }}</p>
-        <p class="room-language">🌐 Language: {{ room.language }}</p>
         <div class="room-footer">
           <button class="join-btn" @click="openModal(roomID)">Join This Room</button>
         </div>
