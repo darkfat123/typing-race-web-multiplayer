@@ -54,13 +54,8 @@ func HandleLobbyWebSocket(w http.ResponseWriter, r *http.Request) {
 	lobbyClients[conn] = true
 	lobbyMutex.Unlock()
 
-	filteredRoomList := FilterUnlockedRooms()
-	conn.WriteJSON(map[string]interface{}{
-		"type":     "room_list",
-		"roomList": filteredRoomList,
-	})
+	BroadcastRoomListToLobby()
 
-	// รออ่าน (บล็อคไว้ เพื่อไม่ให้ฟังก์ชันจบเร็ว)
 	for {
 		_, _, err := conn.ReadMessage()
 		if err != nil {
@@ -68,7 +63,6 @@ func HandleLobbyWebSocket(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// ลบ client ออกเมื่อหลุด
 	lobbyMutex.Lock()
 	delete(lobbyClients, conn)
 	lobbyMutex.Unlock()
