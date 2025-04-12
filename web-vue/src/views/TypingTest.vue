@@ -16,10 +16,11 @@
             </template>
 
             <button v-if="connected && isGameStarted && !hasVotedRestart" class="btn" @click="voteRestart">
-    Vote to Restart
-    <span v-if="restartVoteInfo.total > 0" class="vote-info"> {{ restartVoteInfo.votes }}/{{ restartVoteInfo.total }}
-    </span>
-</button>
+                Vote to Restart
+                <span v-if="restartVoteInfo.total > 0" class="vote-info"> {{ restartVoteInfo.votes }}/{{
+                    restartVoteInfo.total }}
+                </span>
+            </button>
 
 
         </div>
@@ -27,15 +28,26 @@
 
     <div v-if="connected && isGameStarted" class="typing-container" @keydown="handleKeydown" tabindex="0"
         ref="typingBox">
-        <h3>Type this message:</h3>
+        <div class="row">
+            <div class="current-wpm">
+                <RoundedIcon label="current wpm:" color="#9FB3DF" />
+                <span v-if="currentUser && wpmData[currentUser]">
+                    {{ wpmData[currentUser] }} wpm
+                </span>
+            </div>
+            <div class="timer">
+                <RoundedIcon label="time:" color="#E38E49" />
+                <span>{{ formattedElapsedTime }}</span>
+            </div>
+        </div>
         <p class="typing-text">
             <span v-for="(char, index) in givenText" :key="index" :class="getCharClass(index)">
                 {{ char }}
             </span>
         </p>
-        <h3>Live WPM:</h3>
         <ul class="wpm-list">
-            <li v-for="(wpm, user) in wpmData" :key="user">{{ user }}: {{ wpm }} WPM</li>
+            <li v-for="(wpm, user, index) in wpmDataFinished" :key="user"> No. {{ index + 1 }} - {{ user }}: <span
+                    class="wpm">{{ wpm }}</span> WPM</li>
         </ul>
     </div>
 
@@ -45,7 +57,12 @@
 </template>
 
 <script>
+import RoundedIcon from '@/components/RoundedIcon.vue';
+
 export default {
+    components: {
+        RoundedIcon
+    },
     data() {
         return {
             username: "",
@@ -57,14 +74,19 @@ export default {
             readyPlayers: [],
             ws: null,
             wpmData: {},
+            wpmDataFinished: {},
             connected: false,
             isReady: false,
             restartVoteInfo: { votes: 0, total: 0 },
             hasVotedRestart: false,
             isGameStarted: false,
+            elapsedTime: 0,
+            startTime: null,
+            timerInterval: null,
             countdown: null,
             countdownValue: 3,
             isCountingDown: false,
+            timer: null,
             finishSound: new Audio("/complete.wav"),
             startSound: new Audio("/countdown.mp3"),
         };
@@ -73,6 +95,24 @@ export default {
         this.finishSound.volume = 0.45;
         this.startSound.volume = 0.15;
         this.$refs.typingBox?.focus();
+    },
+    computed: {
+        currentUser() {
+            return sessionStorage.getItem("username");
+        },
+        filteredWpmData() {
+            const currentUser = currentUser();
+            if (!currentUser) return {};
+            return {
+                [currentUser]: this.wpmData[currentUser]
+            };
+        },
+        formattedElapsedTime() {
+            const totalSeconds = Math.floor(this.elapsedTime);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
     },
     created() {
         this.username = sessionStorage.getItem("username") || "";
@@ -146,6 +186,7 @@ export default {
                     this.wpmData[data.username] = data.wpm.toFixed(2);
                 }
                 if (data.type === "finished") {
+                    this.wpmDataFinished = JSON.parse(JSON.stringify(this.wpmData));
                     this.finishSound.play();
                 }
                 if (data.type === "update_votes") {
@@ -158,6 +199,7 @@ export default {
                     this.isGameStarted = false;
                     this.hasVotedRestart = false;
                     this.wpmData = {}
+                    this.wpmDataFinished = {}
                     this.restartVoteInfo = { votes: 0, total: 0 };
                     this.startCountdown();
                 }
@@ -205,18 +247,27 @@ export default {
             this.isCountingDown = true;
             this.countdownValue = 3;
             this.startSound.play();
+
             this.countdown = setInterval(() => {
                 this.countdownValue--;
                 if (this.countdownValue === 0) {
                     clearInterval(this.countdown);
                     this.isCountingDown = false;
                     this.isGameStarted = true;
+
+                    this.startTime = performance.now();
+                    this.timerInterval = setInterval(() => {
+                        const now = performance.now();
+                        this.elapsedTime = ((now - this.startTime) / 1000).toFixed(2);
+                    }, 100);
+
                     this.$nextTick(() => {
                         this.$refs.typingBox?.focus();
                     });
                 }
             }, 1000);
         },
+
         voteRestart() {
             if (this.ws && this.connected && !this.hasVotedRestart) {
                 this.hasVotedRestart = true;
@@ -328,6 +379,10 @@ export default {
     text-align: center;
 }
 
+.typing-container h3 {
+    margin-bottom: 20px;
+}
+
 .typing-text {
     font-size: 1.4em;
 
@@ -404,5 +459,28 @@ export default {
     .typing-container {
         max-width: 100%;
     }
+}
+
+.row {
+    display: flex;
+    justify-content: flex-end;
+    text-align: left;
+    gap: 15px;
+}
+
+.current-wpm,
+.timer {
+    font-size: 12px;
+    display: flex;
+    letter-spacing: 1px;
+}
+
+.timer span,
+.current-wpm span {
+    min-width: 80px;
+}
+
+.wpm {
+    color: #FF8343;
 }
 </style>

@@ -13,14 +13,7 @@
       <button class="control-btn" @click="increaseValue">+</button>
     </div>
 
-    <div class="language-selector">
-      <button :class="['lang-btn', { selected: language === 'th' }]" @click="selectLanguage('th')">
-        Thai
-      </button>
-      <button :class="['lang-btn', { selected: language === 'en' }]" @click="selectLanguage('en')">
-        English
-      </button>
-    </div>
+    <LanguageSelector :selectedLang="language" @update:lang="language = $event" />
 
     <button @click="joinRoom" class="btn">Create Room</button>
   </div>
@@ -28,10 +21,12 @@
 
 <script>
 import MenuButton from '../components/MenuButton.vue';
+import LanguageSelector from '../components/LanguageSelector.vue';
 
 export default {
   components: {
-    MenuButton
+    MenuButton,
+    LanguageSelector
   },
   data() {
     return {
@@ -151,38 +146,6 @@ export default {
 
 .btn:hover {
   background: linear-gradient(to right, var(--bg-color), goldenrod);
-  transform: scale(1.01);
-}
-
-.language-selector {
-  gap: 10px;
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  margin-bottom: 10px;
-  margin-top: 20px;
-}
-
-.lang-btn {
-  flex: 1;
-  padding: 10px 0;
-  border-radius: 5px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  color: var(--text-color);
-  background-color: transparent;
-  cursor: pointer;
-  transition: background 0.3s ease, transform 0.2s ease;
-}
-
-.lang-btn.selected {
-  background-color: var(--main-btn-color);
-  color: var(--text-color);
-}
-
-.lang-btn:hover {
-  color: black;
-  background-color: #f1f1f1;
   transform: scale(1.01);
 }
 

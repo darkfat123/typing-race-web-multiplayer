@@ -35,7 +35,7 @@ async function typeLoop() {
                 index++
                 await sleep(100)
             } else {
-                await sleep(3000)
+                await sleep(5000)
                 isDeleting = true
             }
         } else {

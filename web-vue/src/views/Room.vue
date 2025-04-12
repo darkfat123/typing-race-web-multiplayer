@@ -5,20 +5,23 @@
       <MenuButton label="Create New Room" to="/create-room" class="create-room-btn" />
     </div>
     <input type="text" v-model="searchRoomID" placeholder="Search Room ID" class="input" />
+    <LanguageSelector :selectedLang="language" @update:lang="language = $event" class="language-selector"/>
     <div v-if="Object.keys(filteredRoomList).length === 0">
       <p>No active rooms.</p>
     </div>
 
     <ul v-else class="room-list">
       <li v-for="(users, roomID) in filteredRoomList" :key="roomID" class="room-card">
-        <h4>🔑 Room ID: {{ roomID }}</h4>
+        <h4>🔑 Room ID: {{ roomID }}
+          <span v-if="users.length > 0" class="room-user-count">({{ users.length }} users)</span>
+        </h4>
         <p v-if="users && users.length > 0">{{ users.join(", ") }}</p>
         <div class="room-footer">
           <button class="join-btn" @click="openModal(roomID)">Join This Room</button>
-
         </div>
       </li>
     </ul>
+
 
     <!-- Username Modal -->
     <div v-if="showUsernameModal" class="modal-overlay">
@@ -36,12 +39,14 @@
 
 <script>
 import MenuButton from '../components/MenuButton.vue';
+import LanguageSelector from '../components/LanguageSelector.vue';
 sessionStorage.removeItem("username")
 sessionStorage.removeItem("language")
 sessionStorage.removeItem("roomID")
 export default {
   components: {
-    MenuButton
+    MenuButton,
+    LanguageSelector
   },
   data() {
     return {
@@ -132,7 +137,7 @@ export default {
   text-align: center;
   width: 100%;
   max-width: 1000px;
-  margin: 1rem 1rem 2rem 1rem;
+  margin: 1rem 1rem 1rem 1rem;
   position: relative;
 }
 
@@ -216,10 +221,17 @@ export default {
   z-index: 1000;
 }
 
+.room-user-count {
+  font-size: 0.9rem;
+  color: #888;
+  margin-left: 8px;
+  font-weight: bold;
+}
+
 .modal-content {
   background: var(--bg-color);
   color: var(--text-color);
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: 10px;
   width: 90%;
   max-width: 400px;
@@ -231,12 +243,13 @@ export default {
   width: 100%;
   padding: 10px;
   margin-top: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 0px;
   border-radius: 5px;
   border: 1px solid #ccc;
 }
 
 .modal-buttons {
+  margin-top: 20px;
   display: flex;
   justify-content: space-between;
   gap: 10px;
@@ -264,6 +277,9 @@ export default {
   background: #c82333;
 }
 
+.language-selector {
+  margin-bottom: 25px;
+}
 
 @media (max-width: 768px) {
   .room-container {
