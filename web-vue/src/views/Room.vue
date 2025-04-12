@@ -5,21 +5,24 @@
       <MenuButton label="Create New Room" to="/create-room" class="create-room-btn" />
     </div>
     <input type="text" v-model="searchRoomID" placeholder="Search Room ID" class="input" />
-    <LanguageSelector :selectedLang="language" @update:lang="language = $event" class="language-selector"/>
+    <LanguageSelector :selectedLang="language" @update:lang="language = $event" class="language-selector" />
     <div v-if="Object.keys(filteredRoomList).length === 0">
       <p>No active rooms.</p>
     </div>
 
     <ul v-else class="room-list">
-      <li v-for="(users, roomID) in filteredRoomList" :key="roomID" class="room-card">
-        <h4>🔑 Room ID: {{ roomID }}
-          <span v-if="users.length > 0" class="room-user-count">({{ users.length }} users)</span>
+      <li v-for="(room, roomID) in filteredRoomList" :key="roomID" class="room-card">
+        <h4>
+          🔑 Room ID: {{ roomID }}
+          <span v-if="room.users.length > 0" class="room-user-count">({{ room.users.length }}/{{ room.limit }} users)</span>
         </h4>
-        <p v-if="users && users.length > 0">{{ users.join(", ") }}</p>
+        <p v-if="room.users && room.users.length > 0">{{ room.users.join(", ") }}</p>
+        <p class="room-language">🌐 Language: {{ room.language }}</p>
         <div class="room-footer">
           <button class="join-btn" @click="openModal(roomID)">Join This Room</button>
         </div>
       </li>
+
     </ul>
 
 
@@ -66,16 +69,17 @@ export default {
   computed: {
     filteredRoomList() {
       const filtered = {};
-      for (const [roomID, users] of Object.entries(this.roomList)) {
+      for (const [roomID, room] of Object.entries(this.roomList)) {
         if (
           (this.searchRoomID && roomID.includes(this.searchRoomID)) ||
           !this.searchRoomID
         ) {
-          filtered[roomID] = users;
+          filtered[roomID] = room;
         }
       }
       return filtered;
-    },
+    }
+    ,
   },
   methods: {
     openModal(roomID) {
@@ -97,18 +101,15 @@ export default {
       this.$router.push("/typing-test");
     },
     updateRoomList(newData) {
-      for (const key in this.roomList) {
-        if (!(key in newData)) {
-          delete this.roomList[key];
+      const filtered = {};
+      for (const [roomID, room] of Object.entries(newData)) {
+        if (room.users && room.users.length > 0) {
+          filtered[roomID] = room;
         }
       }
-
-      for (const [key, value] of Object.entries(newData)) {
-        if (Array.isArray(value) && value.length > 0) {
-          this.roomList[key] = value;
-        }
-      }
-    },
+      this.roomList = filtered;
+    }
+    ,
     connectWebSocket() {
       this.socket = new WebSocket(import.meta.env.VITE_WS_URL + "/ws/lobby");
 

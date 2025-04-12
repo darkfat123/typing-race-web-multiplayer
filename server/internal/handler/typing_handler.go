@@ -56,7 +56,7 @@ func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error sending text:", err)
 	}
 
-	log.Printf("Player %s has joined room %s (Max players: %d, Now: %d)", player.Username, room.ID, room.Limit, len(room.Players))
+	log.Printf("Player %s has joined room %s", player.Username, room.ID)
 
 	logic.UpdateUserList(room)
 	logic.UpdateReadyStatus(room)

@@ -23,9 +23,13 @@ func BroadcastRoomListToLobby() {
 	if len(validRoomList) == 0 {
 		log.Println("No rooms found.")
 	} else {
-		for roomID, users := range validRoomList {
-			log.Printf("🏠 Room %s → [%s]", roomID, strings.Join(users, ", "))
+		for roomID, data := range validRoomList {
+			users := data["users"].([]string)
+			language := data["language"].(string)
+			limit := data["limit"]
+			log.Printf("🏠 Room %s (max: %d) → [%s] (%s) ", roomID, limit, strings.Join(users, ", "), language)
 		}
+
 	}
 
 	message := map[string]interface{}{
@@ -68,13 +72,17 @@ func HandleLobbyWebSocket(w http.ResponseWriter, r *http.Request) {
 	lobbyMutex.Unlock()
 }
 
-func FilterUnlockedRooms() map[string][]string {
-	result := make(map[string][]string)
+func FilterUnlockedRooms() map[string]map[string]interface{} {
+	result := make(map[string]map[string]interface{})
 
 	for roomID, room := range logic.Rooms {
 		if !room.Locked {
 			if users, exists := logic.RoomIdList[roomID]; exists && len(users) > 0 {
-				result[roomID] = users
+				result[roomID] = map[string]interface{}{
+					"users":    users,
+					"language": room.Language,
+					"limit":    room.Limit,
+				}
 			}
 		}
 	}
@@ -108,14 +116,11 @@ func RemoveUserFromRoom(roomID string, username string) {
 	}
 
 	if len(newUsers) == 0 {
-		// ถ้าไม่มีผู้ใช้เหลืออยู่ในห้อง → ลบห้องออกจาก map
 		delete(logic.RoomIdList, roomID)
 		log.Printf("Room %s deleted because it's empty", roomID)
 	} else {
-		// ถ้ามีผู้ใช้เหลืออยู่ในห้อง → อัปเดตรายชื่อ
 		logic.RoomIdList[roomID] = newUsers
 	}
 
-	// อัปเดตข้อมูลไปยังผู้ใช้ทั้งหมดใน lobby
 	BroadcastRoomListToLobby()
 }
