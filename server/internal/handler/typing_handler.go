@@ -81,12 +81,15 @@ func HandleTypingWebSocket(w http.ResponseWriter, r *http.Request) {
 				newText := logic.GetRandomText(room.Language)
 				room.Text = newText
 
+				for _, p := range room.Players {
+					p.StartTime = time.Now()
+					p.Finished = false
+				}
+
 				logic.Broadcast(room, map[string]interface{}{
 					"type": "restart_game",
 					"text": newText,
 				})
-				player.StartTime = time.Now()
-				player.Finished = false
 
 			} else {
 				logic.Broadcast(room, map[string]interface{}{
