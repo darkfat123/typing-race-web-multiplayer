@@ -1,5 +1,9 @@
 <template>
     <div class="language-selector">
+        <button v-if="needAll" :class="['lang-btn', { selected: selectedLang === '' }]"
+            @click="selectLanguage('')">
+            All
+        </button>
         <button :class="['lang-btn', { selected: selectedLang === 'th' }]" @click="selectLanguage('th')">
             Thai
         </button>
@@ -17,6 +21,10 @@ export default {
             type: String,
             required: true,
         },
+        needAll: {
+            type: Boolean,
+            default: false,
+        }
     },
     emits: ['update:lang'],
     methods: {

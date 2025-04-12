@@ -5,7 +5,8 @@
       <MenuButton label="Create New Room" to="/create-room" class="create-room-btn" />
     </div>
     <input type="text" v-model="searchRoomID" placeholder="Search Room ID" class="input" />
-    <LanguageSelector :selectedLang="language" @update:lang="language = $event" class="language-selector" />
+    <LanguageSelector :needAll="true" :selectedLang="language" @update:lang="language = $event"
+      class="language-selector" />
     <div v-if="Object.keys(filteredRoomList).length === 0">
       <p>No active rooms.</p>
     </div>
@@ -14,7 +15,8 @@
       <li v-for="(room, roomID) in filteredRoomList" :key="roomID" class="room-card">
         <h4>
           🔑 Room ID: {{ roomID }}
-          <span v-if="room.users.length > 0" class="room-user-count">({{ room.users.length }}/{{ room.limit }} users)</span>
+          <span v-if="room.users.length > 0" class="room-user-count">({{ room.users.length }}/{{ room.limit }}
+            users)</span>
         </h4>
         <p class="room-language">🌐 Language: {{ room.language.toUpperCase() }}</p>
         <p v-if="room.users && room.users.length > 0">{{ room.users.join(", ") }}</p>
@@ -58,7 +60,7 @@ export default {
       selectedRoomID: "",
       searchRoomID: "",
       showUsernameModal: false,
-      language: "th",
+      language: "",
       roomList: {},
       socket: null,
     };
@@ -70,16 +72,15 @@ export default {
     filteredRoomList() {
       const filtered = {};
       for (const [roomID, room] of Object.entries(this.roomList)) {
-        if (
-          (this.searchRoomID && roomID.includes(this.searchRoomID)) ||
-          !this.searchRoomID
-        ) {
+        const matchesSearch = !this.searchRoomID || roomID.includes(this.searchRoomID);
+        const matchesLang = !this.language || room.language === this.language;
+
+        if (matchesSearch && matchesLang) {
           filtered[roomID] = room;
         }
       }
       return filtered;
-    }
-    ,
+    },
   },
   methods: {
     openModal(roomID) {
