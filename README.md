@@ -125,7 +125,7 @@ npm run dev
 ```bash
 cd server
 go mod tidy
-go run main.go
+go run cmd/main.go
 ```
 
 #### 4. Environment Variables
